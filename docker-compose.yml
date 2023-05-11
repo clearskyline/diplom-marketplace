@@ -1,0 +1,57 @@
+version: '3.9'
+
+networks:
+  backend:
+
+volumes:
+  pgdata:
+
+services:
+  postgredb:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    volumes:
+      - .:/docker-entrypoint-initdb.d
+      - ./logs:/var/log
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - backend
+  marketplace_app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/code
+    environment:
+      APP_ENV: development
+    command: >
+      sh -c "python3 manage.py makemigrations &&
+            python3 manage.py migrate &&
+            gunicorn marketplace.wsgi:application --bind 0.0.0.0:8000"
+    depends_on:
+      - postgredb
+    networks:
+      - backend
+    restart: unless-stopped
+  nginx:
+      image: nginx:latest
+      ports:
+        - "80:80"
+      volumes:
+        - ./nginx:/etc/nginx/conf.d
+      depends_on:
+        - marketplace_app
+      networks:
+        - backend

@@ -1,0 +1,11 @@
+{% autoescape off %}
+
+
+Hi {{ user.user_name }},
+
+Your order {{ order.order_number }} has been confirmed.
+
+Delivery address: {{ user.address }}.
+
+
+{% endautoescape %}

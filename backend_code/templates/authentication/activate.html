@@ -1,0 +1,14 @@
+{% autoescape off %}
+
+
+Hi {{ user.user_name }},
+
+    Please use the link below to verify your account.
+
+http://{{ domain }}/api/v1/email-activation/{{  uid  }}/{{ token }}
+
+
+
+
+{% endautoescape %}
+

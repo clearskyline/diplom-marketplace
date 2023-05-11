@@ -1,0 +1,64 @@
+shop: Связной
+vendor_id: 10785
+
+categories:
+  - prod_cat_id: 224
+    name: Смартфоны
+  - prod_cat_id: 15
+    name: Аксессуары
+  - prod_cat_id: 19
+    name: Flash-накопители
+
+goods:
+  - stock_number: 4216292
+    category: 224
+    model: apple/iphone/xs-max
+    name: Смартфон Apple iPhone XS Max 512GB (золотистый)
+    price: 110000
+    recommended_price: 116990
+    amount: 14
+    weight_class: 1
+    parameters:
+      "Диагональ (дюйм)": 6.5
+      "Разрешение (пикс)": 2688x1242
+      "Встроенная память (Гб)": 512
+      "Цвет": золотистый
+  - stock_number: 4216313
+    category: 224
+    model: apple/iphone/xr
+    name: Смартфон Apple iPhone XR 256GB (красный)
+    price: 65000
+    recommended_price: 69990
+    amount: 9
+    weight_class: 1
+    parameters:
+      "Диагональ (дюйм)": 6.1
+      "Разрешение (пикс)": 1792x828
+      "Встроенная память (Гб)": 256
+      "Цвет": красный
+  - stock_number: 4216226
+    category: 224
+    model: apple/iphone/xr
+    name: Смартфон Apple iPhone XR 256GB (черный)
+    price: 65000
+    recommended_price: 69990
+    amount: 5
+    weight_class: 2
+    parameters:
+      "Диагональ (дюйм)": 6.1
+      "Разрешение (пикс)": 1792x828
+      "Встроенная память (Гб)": 256
+      "Цвет": черный
+  - stock_number: 4672670
+    category: 224
+    model: apple/iphone/xr
+    name: Смартфон Apple iPhone XR 128GB (синий)
+    price: 60000
+    recommended_price: 64990
+    amount: 7
+    weight_class: 2
+    parameters:
+      "Диагональ (дюйм)": 6.1
+      "Разрешение (пикс)": 1792x828
+      "Встроенная память (Гб)": 256
+      "Цвет": синий
