@@ -1,0 +1,14 @@
+'[{"id": 1, "stock_number": 4216292, "name": "\u0421\u043c\u0430\u0440\u0442\u0444\u043e\u043d
+  Apple iPhone XS Max 512GB (\u0437\u043e\u043b\u043e\u0442\u0438\u0441\u0442\u044b\u0439)",
+  "model": "apple/iphone/xs-max", "amount": 14, "price": 110000, "weight_class": 1,
+  "recommended_price": 116990, "custom_description": null}, {"id": 3, "stock_number":
+  4216226, "name": "\u0421\u043c\u0430\u0440\u0442\u0444\u043e\u043d Apple iPhone
+  XR 256GB (\u0447\u0435\u0440\u043d\u044b\u0439)", "model": "apple/iphone/xr", "amount":
+  5, "price": 65000, "weight_class": 2, "recommended_price": 69990, "custom_description":
+  null}, {"id": 2, "stock_number": 4216313, "name": "\u0421\u043c\u0430\u0440\u0442\u0444\u043e\u043d
+  Apple iPhone XR 256GB (\u043a\u0440\u0430\u0441\u043d\u044b\u0439)", "model": "apple/iphone/xr",
+  "amount": 9, "price": 65000, "weight_class": 1, "recommended_price": 69990, "custom_description":
+  null}, {"id": 4, "stock_number": 4672670, "name": "\u0421\u043c\u0430\u0440\u0442\u0444\u043e\u043d
+  Apple iPhone XR 128GB (\u0441\u0438\u043d\u0438\u0439)", "model": "apple/iphone/xr",
+  "amount": 7, "price": 60000, "weight_class": 2, "recommended_price": 64990, "custom_description":
+  null}]'

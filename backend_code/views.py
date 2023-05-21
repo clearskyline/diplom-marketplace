@@ -1,3 +1,4 @@
+import json
 import random
 import threading
 from django.conf import settings
@@ -5,6 +6,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q
 from django.forms import forms
 from django.template.loader import render_to_string
@@ -241,8 +243,7 @@ class CustomerView(APIView):
             request.data._mutable = True
             request.data['password'] = make_password(request.data['password'])
             if request.data['registered_vendor'] == 'True':
-                request.data['seller_vendor_id'] = 13113
-                # request.data['seller_vendor_id'] = random.randint(200,20000)
+                request.data['seller_vendor_id'] = random.randint(200,20000)
             else:
                 request.data['seller_vendor_id'] = None
             user_serializer = CustomerSerializer(data=request.data)
@@ -707,16 +708,12 @@ class ProductExportView(APIView):
             if json_auth_err:
                 return json_auth_err
             else:
-                all_products_export = Product.objects.filter(delivery_store__vendor_id=current_customer).all()
+                all_products_export = Product.objects.filter(delivery_store__vendor_id=current_customer).values()
                 if not all_products_export:
                     return JsonResponse({'Status': False, 'Error': 'Product list empty'})
                 else:
-                    all_prod_ser = ProductSerializer(all_products_export, many=True)
-                    return Response(all_prod_ser.data)
+                    serialized_export = json.dumps(list(all_products_export), cls=DjangoJSONEncoder)
+                    with open(r'export_file.yaml', 'w', encoding="utf-8") as file:
+                        prods = yaml.dump(serialized_export, file)
+                    return JsonResponse({'Status': True, 'Message': 'Product list has been exported'})
         return JsonResponse({'Status': False, 'Error': 'Please provide email address'})
-
-
-
-
-
-

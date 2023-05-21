@@ -5,6 +5,7 @@ networks:
 
 volumes:
   pgdata:
+  coding:
 
 services:
   postgredb:
@@ -33,7 +34,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/code
+      - coding:/code
     environment:
       APP_ENV: development
     command: >
