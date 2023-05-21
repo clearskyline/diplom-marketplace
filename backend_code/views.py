@@ -241,7 +241,8 @@ class CustomerView(APIView):
             request.data._mutable = True
             request.data['password'] = make_password(request.data['password'])
             if request.data['registered_vendor'] == 'True':
-                request.data['seller_vendor_id'] = random.randint(200,20000)
+                request.data['seller_vendor_id'] = 13113
+                # request.data['seller_vendor_id'] = random.randint(200,20000)
             else:
                 request.data['seller_vendor_id'] = None
             user_serializer = CustomerSerializer(data=request.data)
@@ -695,3 +696,27 @@ class OrderDetailView(APIView):
                 except ValueError as err:
                     return JsonResponse({'Status': False, 'Error': 'Invalid order number'})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+
+
+class ProductExportView(APIView):
+
+    # export all products by specific vendor
+    def get(self, request, *args, **kwargs):
+        if {'email_login'}.issubset(request.data):
+            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
+            if json_auth_err:
+                return json_auth_err
+            else:
+                all_products_export = Product.objects.filter(delivery_store__vendor_id=current_customer).all()
+                if not all_products_export:
+                    return JsonResponse({'Status': False, 'Error': 'Product list empty'})
+                else:
+                    all_prod_ser = ProductSerializer(all_products_export, many=True)
+                    return Response(all_prod_ser.data)
+        return JsonResponse({'Status': False, 'Error': 'Please provide email address'})
+
+
+
+
+
+
