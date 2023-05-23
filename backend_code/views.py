@@ -27,15 +27,17 @@ from backend_code.serializers import ProductSerializer, CustomerSerializer, Stor
     StoreCatSerializer, ProdCatSerializer, OrderSerializer, OrderItemSerializer
 from backend_code.token_gen import generate_token
 
+from backend_code.tasks import send_mail_async
 
-class EmailThread(threading.Thread):
 
-    def __init__(self, email):
-        self.email = email
-        threading.Thread.__init__(self)
-
-    def run(self):
-        self.email.send()
+# class EmailThread(threading.Thread):
+#
+#     def __init__(self, email):
+#         self.email = email
+#         threading.Thread.__init__(self)
+#
+#     def run(self):
+#         self.email.send()
 
 
 def send_activation_email(user, request):
@@ -48,12 +50,7 @@ def send_activation_email(user, request):
         'token': generate_token.make_token(user)
     })
 
-    email = EmailMessage(subject=email_subject,
-                 body=email_body,
-                 from_email=settings.EMAIL_FROM_USER,
-                 to=[user.email_login]
-                 )
-    EmailThread(email).start()
+    send_mail_async.delay(email_subject, email_body, settings.EMAIL_FROM_USER, [user.email_login])
 
 
 def activate_user(request, uidb64, token):
@@ -75,6 +72,7 @@ def activate_user(request, uidb64, token):
     return render(request, 'authentication/activate-failed.html', {'user': user})
 
 
+'''
 def order_confirmation_email(user, order, request):
     email_subject = "Order confirmed"
     email_body = render_to_string('confirmation/order_confirm.html', {
@@ -88,6 +86,7 @@ def order_confirmation_email(user, order, request):
                  to=[user.email_login]
                  )
     EmailThread(email).start()
+'''
 
 
 def custom_authenticate(email):
