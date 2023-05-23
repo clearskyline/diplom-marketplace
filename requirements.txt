@@ -8,3 +8,5 @@ bcrypt
 python-dotenv
 six
 gunicorn
+celery
+redis
