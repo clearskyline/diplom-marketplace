@@ -668,15 +668,3 @@ class ProductExportView(APIView):
                 export_product_list_async.delay(file, request.data)
                 return JsonResponse({'Status': True, 'Message': 'Details will be sent to your email'})
         return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
-
-
-        '''        
-                all_products_export = Product.objects.filter(delivery_store__vendor_id=current_customer).values()
-                if not all_products_export:
-                    return JsonResponse({'Status': False, 'Error': 'Product list empty'})
-                else:
-                    serialized_export = json.dumps(list(all_products_export), cls=DjangoJSONEncoder)
-                    with open(r'export_file.yaml', 'w', encoding="utf-8") as file:
-                        prods = yaml.dump(serialized_export, file)
-                    return JsonResponse({'Status': True, 'Message': 'Product list has been exported'})
-'''
