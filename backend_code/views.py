@@ -30,16 +30,6 @@ from backend_code.token_gen import generate_token
 from backend_code.tasks import send_mail_async
 
 
-# class EmailThread(threading.Thread):
-#
-#     def __init__(self, email):
-#         self.email = email
-#         threading.Thread.__init__(self)
-#
-#     def run(self):
-#         self.email.send()
-
-
 def send_activation_email(user, request):
     current_site = get_current_site(request)
     email_subject = "Activation email"
@@ -72,7 +62,7 @@ def activate_user(request, uidb64, token):
     return render(request, 'authentication/activate-failed.html', {'user': user})
 
 
-'''
+
 def order_confirmation_email(user, order, request):
     email_subject = "Order confirmed"
     email_body = render_to_string('confirmation/order_confirm.html', {
@@ -80,13 +70,7 @@ def order_confirmation_email(user, order, request):
         'order': order
     })
 
-    email = EmailMessage(subject=email_subject,
-                 body=email_body,
-                 from_email=settings.EMAIL_FROM_USER,
-                 to=[user.email_login]
-                 )
-    EmailThread(email).start()
-'''
+    send_mail_async.delay(email_subject, email_body, settings.EMAIL_FROM_USER, [user.email_login])
 
 
 def custom_authenticate(email):
@@ -272,7 +256,8 @@ class CustomerView(APIView):
                             pass_errors.append(err)
                         return JsonResponse({'Status': False, 'Errors': {'password': pass_errors}})
                 if not current_customer.seller_vendor_id and request.data.get('registered_vendor'):
-                    request.data['seller_vendor_id'] = random.randint(200, 20000)
+                    request.data['seller_vendor_id'] = 5612
+                    # request.data['seller_vendor_id'] = random.randint(200, 20000)
                 customer__ = CustomerSerializer(current_customer, data=request.data, partial=True)
                 if customer__.is_valid():
                     customer__.save()
