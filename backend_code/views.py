@@ -27,7 +27,7 @@ from backend_code.serializers import ProductSerializer, CustomerSerializer, Stor
     StoreCatSerializer, ProdCatSerializer, OrderSerializer, OrderItemSerializer
 from backend_code.token_gen import generate_token
 
-from backend_code.tasks import send_mail_async, import_goods_list_async
+from backend_code.tasks import send_mail_async, import_product_list_async
 
 
 def send_activation_email(user, request):
@@ -161,8 +161,9 @@ class VendorSupply(APIView):
             if json_auth_err:
                 return json_auth_err
             else:
-                import_goods_list_async.delay(request.data)
-                return JsonResponse({'Status': True, 'Message': 'Update status will be sent to your email'})
+                file = "goods_yaml.yaml"
+                import_product_list_async.delay(file, request.data)
+                return JsonResponse({'Status': True, 'Message': 'Details will be sent to your email'})
         return JsonResponse({'Status': False, 'Error': 'Please provide your email'})
 
 
