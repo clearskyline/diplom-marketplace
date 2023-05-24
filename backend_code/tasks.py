@@ -28,7 +28,7 @@ def import_product_list_async(file, data):
             body = render_to_string('import_export/import.html', {
                 'user': current_customer,
                 'message_body': 'Vendor or store is not active'})
-            send_mail_async(subject, body, from_email, to)
+            send_mail_async.delay(subject, body, from_email, to)
             return 'Vendor or store is not active'
         else:
             with open(file, "r") as stream:
@@ -39,14 +39,14 @@ def import_product_list_async(file, data):
                     body = render_to_string('import_export/import.html', {
                         'user': current_customer,
                         'message_body': f'Data error - {exc}.'})
-                    send_mail_async(subject, body, from_email, to)
+                    send_mail_async.delay(subject, body, from_email, to)
                     return 'Data error'
             if current_customer.seller_vendor_id != data_loaded['vendor_id']:
                 subject = 'Product list import failed'
                 body = render_to_string('import_export/import.html', {
                     'user': current_customer,
                     'message_body': 'You cannot import product list for this vendor.'})
-                send_mail_async(subject, body, from_email, to)
+                send_mail_async.delay(subject, body, from_email, to)
                 return 'This customer cannot import products for this vendor'
             else:
                 skipped = 0
@@ -54,9 +54,8 @@ def import_product_list_async(file, data):
                     prod_cat, _ = ProductCategory.objects.update_or_create(prod_cat_id=cat['prod_cat_id'], defaults={'name': cat['name']})
                     prod_cat.save()
                 for item in data_loaded['goods']:
-                    check_article_not_unique = Product.objects.filter(stock_number=item['stock_number']).exclude(
-                        delivery_store=current_customer.unique_vendor_id)
-                    if check_article_not_unique:
+                    check_article_exists = Product.objects.filter(stock_number=item['stock_number']).exclude(delivery_store=current_customer.unique_vendor_id)
+                    if check_article_exists:
                         skipped += 1
                     else:
                         current_pr_cat = ProductCategory.objects.filter(prod_cat_id=item['category']).first()
@@ -74,12 +73,12 @@ def import_product_list_async(file, data):
                 body = render_to_string('import_export/import.html', {
                     'user': current_customer,
                     'message_body': f'Product list updated. Number of skipped items: {skipped}.'})
-                send_mail_async(subject, body, from_email, to)
+                send_mail_async.delay(subject, body, from_email, to)
                 return 'OK'
     except ValueError as err:
         subject = 'Product list import failed'
         body = render_to_string('import_export/import.html', {
             'user': current_customer,
             'message_body': 'Product list import failed. Invalid data.'})
-        send_mail_async(subject, body, from_email, to)
+        send_mail_async.delay(subject, body, from_email, to)
         return err

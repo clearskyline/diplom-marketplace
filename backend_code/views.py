@@ -197,7 +197,8 @@ class CustomerView(APIView):
             request.data._mutable = True
             request.data['password'] = make_password(request.data['password'])
             if request.data['registered_vendor'] == 'True':
-                request.data['seller_vendor_id'] = random.randint(200,20000)
+                request.data['seller_vendor_id'] = 56120
+                # request.data['seller_vendor_id'] = random.randint(200,20000)
             else:
                 request.data['seller_vendor_id'] = None
             user_serializer = CustomerSerializer(data=request.data)
@@ -227,7 +228,7 @@ class CustomerView(APIView):
                             pass_errors.append(err)
                         return JsonResponse({'Status': False, 'Errors': {'password': pass_errors}})
                 if not current_customer.seller_vendor_id and request.data.get('registered_vendor'):
-                    request.data['seller_vendor_id'] = 5612
+                    request.data['seller_vendor_id'] = 56120
                     # request.data['seller_vendor_id'] = random.randint(200, 20000)
                 customer__ = CustomerSerializer(current_customer, data=request.data, partial=True)
                 if customer__.is_valid():
