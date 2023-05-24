@@ -1,8 +1,11 @@
+import json
+
 import yaml
 from celery import shared_task
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 import time
 
+from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 
@@ -11,9 +14,12 @@ from marketplace import settings
 
 
 @shared_task()
-def send_mail_async(subject, body, from_email, to):
+def send_mail_async(subject, body, from_email, to, file_path=None):
     time.sleep(2)
-    send_mail(subject, body, from_email, to)
+    mail = EmailMessage(subject, body, from_email, to)
+    if file_path:
+        mail.attach_file(file_path)
+    mail.send()
 
 
 @shared_task()
@@ -25,7 +31,7 @@ def import_product_list_async(file, data):
         store_check = Store.objects.filter(vendor_id=current_customer).first()
         if not current_customer.is_active or not store_check:
             subject = 'Product list import failed'
-            body = render_to_string('import_export/import.html', {
+            body = render_to_string('import_export/import-export.html', {
                 'user': current_customer,
                 'message_body': 'Vendor or store is not active'})
             send_mail_async.delay(subject, body, from_email, to)
@@ -36,14 +42,14 @@ def import_product_list_async(file, data):
                     data_loaded = yaml.safe_load(stream)
                 except yaml.YAMLError as exc:
                     subject = 'Product list import failed'
-                    body = render_to_string('import_export/import.html', {
+                    body = render_to_string('import_export/import-export.html', {
                         'user': current_customer,
                         'message_body': f'Data error - {exc}.'})
                     send_mail_async.delay(subject, body, from_email, to)
                     return 'Data error'
             if current_customer.seller_vendor_id != data_loaded['vendor_id']:
                 subject = 'Product list import failed'
-                body = render_to_string('import_export/import.html', {
+                body = render_to_string('import_export/import-export.html', {
                     'user': current_customer,
                     'message_body': 'You cannot import product list for this vendor.'})
                 send_mail_async.delay(subject, body, from_email, to)
@@ -70,15 +76,40 @@ def import_product_list_async(file, data):
                             'color': item['parameters']['Цвет']})
                         prod_params.save()
                 subject = 'Product list imported successfully'
-                body = render_to_string('import_export/import.html', {
+                body = render_to_string('import_export/import-export.html', {
                     'user': current_customer,
                     'message_body': f'Product list updated. Number of skipped items: {skipped}.'})
                 send_mail_async.delay(subject, body, from_email, to)
                 return 'OK'
     except ValueError as err:
         subject = 'Product list import failed'
-        body = render_to_string('import_export/import.html', {
+        body = render_to_string('import_export/import-export.html', {
             'user': current_customer,
             'message_body': 'Product list import failed. Invalid data.'})
         send_mail_async.delay(subject, body, from_email, to)
         return err
+
+
+@shared_task()
+def export_product_list_async(export_file, data):
+    current_customer = Customer.objects.filter(email_login=data['email_login']).first()
+    from_email = settings.EMAIL_FROM_USER
+    to = [current_customer.email_login]
+    all_products_export = Product.objects.filter(delivery_store__vendor_id=current_customer).values()
+    if not all_products_export:
+        subject = 'Product list cannot be exported'
+        body = render_to_string('import_export/import-export.html', {
+            'user': current_customer,
+            'message_body': 'Product list empty.'})
+        send_mail_async.delay(subject, body, from_email, to)
+        return 'Product list empty'
+    else:
+        serialized_export = json.dumps(list(all_products_export), cls=DjangoJSONEncoder)
+        with open(export_file, 'w', encoding="utf-8") as file:
+            prods = yaml.dump(serialized_export, file)
+        subject = 'Product list'
+        body = render_to_string('import_export/import-export.html', {
+            'user': current_customer,
+            'message_body': 'Please see attached file.'})
+        send_mail_async.delay(subject, body, from_email, to, export_file)
+        return 'Product list has been exported'

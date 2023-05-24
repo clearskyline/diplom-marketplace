@@ -27,7 +27,7 @@ from backend_code.serializers import ProductSerializer, CustomerSerializer, Stor
     StoreCatSerializer, ProdCatSerializer, OrderSerializer, OrderItemSerializer
 from backend_code.token_gen import generate_token
 
-from backend_code.tasks import send_mail_async, import_product_list_async
+from backend_code.tasks import send_mail_async, import_product_list_async, export_product_list_async
 
 
 def send_activation_email(user, request):
@@ -164,7 +164,7 @@ class VendorSupply(APIView):
                 file = "goods_yaml.yaml"
                 import_product_list_async.delay(file, request.data)
                 return JsonResponse({'Status': True, 'Message': 'Details will be sent to your email'})
-        return JsonResponse({'Status': False, 'Error': 'Please provide your email'})
+        return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
 
 
 class ProductSearchView(APIView):
@@ -236,7 +236,7 @@ class CustomerView(APIView):
                     return Response(customer__.data)
                 else:
                     return JsonResponse({'Status': False, 'Error': customer__.errors})
-        return JsonResponse({'Status': False, 'Error': 'Please provide your email'})
+        return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
 
     # user view
     def get(self, request, *args, **kwargs):
@@ -247,7 +247,7 @@ class CustomerView(APIView):
             else:
                 serializer = CustomerSerializer(current_customer)
                 return Response(serializer.data)
-        return JsonResponse({'Status': False, 'Error': 'Please provide your email'})
+        return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
 
     # user delete
     def delete(self, request, *args, **kwargs):
@@ -259,7 +259,7 @@ class CustomerView(APIView):
                 current_customer.delete()
                 return JsonResponse(
                     {'Status': True, 'Message': 'Customer account has been deleted'})
-        return JsonResponse({'Status': False, 'Error': 'Please provide your email'})
+        return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
 
 
 class StoreView(APIView):
@@ -358,7 +358,7 @@ class StoreView(APIView):
                     current_vendor.delete()
                     return JsonResponse(
                         {'Status': True, 'Message': 'This store has been deleted'})
-        return JsonResponse({'Status': False, 'Error': 'Please provide your email'})
+        return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
 
 
 class BasketView(APIView):
@@ -373,7 +373,7 @@ class BasketView(APIView):
                 basket__ = Basket.objects.filter(b_customer=current_customer.id)
                 serializer = BasketSerializer(basket__, many=True)
                 return Response(serializer.data)
-        return JsonResponse({'Status': False, 'Error': 'Please provide your email'})
+        return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
 
     # basket post
     def post(self, request, *args, **kwargs):
@@ -664,6 +664,13 @@ class ProductExportView(APIView):
             if json_auth_err:
                 return json_auth_err
             else:
+                file = "export_file.yaml"
+                export_product_list_async.delay(file, request.data)
+                return JsonResponse({'Status': True, 'Message': 'Details will be sent to your email'})
+        return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
+
+
+        '''        
                 all_products_export = Product.objects.filter(delivery_store__vendor_id=current_customer).values()
                 if not all_products_export:
                     return JsonResponse({'Status': False, 'Error': 'Product list empty'})
@@ -672,4 +679,4 @@ class ProductExportView(APIView):
                     with open(r'export_file.yaml', 'w', encoding="utf-8") as file:
                         prods = yaml.dump(serialized_export, file)
                     return JsonResponse({'Status': True, 'Message': 'Product list has been exported'})
-        return JsonResponse({'Status': False, 'Error': 'Please provide email address'})
+'''
