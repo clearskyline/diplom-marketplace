@@ -1,6 +1,8 @@
 import json
 import random
 import threading
+
+import requests.utils
 from django.conf import settings
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.password_validation import validate_password
@@ -17,7 +19,7 @@ from rest_framework import viewsets
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from rest_framework.decorators import action
+from rest_framework.decorators import action, permission_classes, api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from datetime import datetime, timedelta
@@ -124,24 +126,25 @@ class ProductView(APIView):
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    # def get_permissions(self):
-        # Your logic should be all here
-        # if self.request.method == 'DELETE':
-        #     self.permission_classes = [IsLoggedIn, ]
-        # else:
-        #     self.permission_classes = [IsLoggedIn, ]
-        #
-        # return super(ProductViewSet, self).get_permissions()
 
     queryset = Product.objects.all()
+    lookup_field = 'slug'
     serializer_class = ProductSerializer
-    permission_classes = [IsLoggedIn]
+    # permission_classes = [IsLoggedIn]
 
+    def get_permissions(self):
+        if self.action == "destroy":
+            self.permission_classes = [IsLoggedIn]
+        return super().get_permissions()
 
-    # def destroy(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     self.perform_destroy(instance)
-    #     return JsonResponse({'Status': True, 'Message': 'OK'})
+    # @action(methods=["DELETE"], detail=False)
+    # def my_destroy(self, request, *args, **kwargs):
+        # instance = self.get_object()
+        # self.perform_destroy(instance)
+
+        # del_prod = self.queryset.filter(stock_number=request.data['stock_number']).first()
+        # del_prod.delete()
+        # return JsonResponse({'Status': True, 'Message': 'OK'})
 
 
 

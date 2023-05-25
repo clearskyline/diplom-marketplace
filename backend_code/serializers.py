@@ -16,6 +16,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['stock_number', 'name', 'model', 'delivery_store', 'amount', 'price', 'recommended_price', 'weight_class']
+        lookup_field = 'slug'
 
 
 class CustomerSerializer(serializers.ModelSerializer):

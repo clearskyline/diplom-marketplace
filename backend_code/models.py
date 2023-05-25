@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
-
+from django.template.defaultfilters import slugify
 
 STATUS_CHOICES = (
     ('new', 'NEW'),
@@ -54,6 +54,7 @@ class ProductParameters(models.Model):
 
 class Product(models.Model):
     stock_number = models.PositiveIntegerField(unique=True)
+    slug = models.SlugField(unique=True, max_length=100, db_index=True, verbose_name='product_URL')
     name = models.CharField(max_length=250)
     model = models.CharField(max_length=250, null=True, blank=True)
     delivery_store = models.ManyToManyField(Store, related_name='delivery_by_store')
@@ -69,6 +70,10 @@ class Product(models.Model):
         verbose_name = 'Product'
         verbose_name_plural = 'Products'
         ordering = ('-name',)
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.stock_number)
+        super(Product, self).save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.stock_number} ({self.name} - {self.price} руб.)'
