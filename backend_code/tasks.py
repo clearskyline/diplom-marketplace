@@ -2,14 +2,17 @@ import json
 
 import yaml
 from celery import shared_task
+from django.core.exceptions import FieldError
 from django.core.mail import send_mail, EmailMessage
 import time
 
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import IntegrityError
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 
 from backend_code.models import ProductCategory, Product, ProductParameters, Store, Customer
+from backend_code.serializers import ProductSerializer
 from marketplace import settings
 
 
@@ -66,7 +69,13 @@ def import_product_list_async(file, data):
                         skipped += 1
                     else:
                         current_pr_cat = ProductCategory.objects.filter(prod_cat_id=item['category']).first()
-                        current_item, _ = Product.objects.update_or_create(stock_number=item['stock_number'], defaults={'name': item['name'], 'model': item['model'], 'amount': item['amount'], 'price': item['price'], 'recommended_price': item['recommended_price'],'weight_class': item['weight_class']})
+                        deserializer = ProductSerializer(data=item)
+                        deserializer.is_valid()
+                        product_specifications = deserializer.validated_data
+                        current_item, _ = Product.objects.update_or_create(stock_number=item['stock_number'], defaults={**product_specifications})
+
+                        # current_item, _ = Product.objects.update_or_create(stock_number=item['stock_number'], defaults={'name': item['name'], 'model': item['model'], 'amount': item['amount'], 'price': item['price'], 'recommended_price': item['recommended_price'],'weight_class': item['weight_class']})
+
                         current_item.delivery_store.add(current_customer.unique_vendor_id)
                         current_item.prods.add(current_pr_cat)
                         current_item.save()
