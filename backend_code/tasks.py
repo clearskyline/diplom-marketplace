@@ -20,6 +20,7 @@ def send_mail_async(subject, body, from_email, to, file_path=None):
     if file_path:
         mail.attach_file(file_path)
     mail.send()
+    return 'Mail sent'
 
 
 @shared_task()

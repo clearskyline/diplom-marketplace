@@ -2,8 +2,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from backend_code.views import VendorSupply, CustomerView, StoreView, BasketView, StoreCatView, \
-    ProductCatView, LoginView, OrderView, ProductSearchView, OrderDetailView, activate_user, ProductExportView, \
-    ProductViewSet, ProductView
+    ProductCatView, LoginView, OrderView, OrderDetailView, activate_user, ProductExportView, \
+    ProductViewSet
 
 
 router = DefaultRouter()
@@ -12,9 +12,9 @@ router.register(r'goods', ProductViewSet, basename="product-set")
 
 app_name = 'backend_code'
 urlpatterns = [
-    path('products/', ProductView.as_view(), name='product_page'),
+    # path('products/', ProductView.as_view(), name='product_page'),
     path('goods-import/', VendorSupply.as_view(), name='import_goods_page'),
-    path('product-search/', ProductSearchView.as_view(), name='search_product'),
+    # path('product-search/', ProductSearchView.as_view(), name='search_product'),
     path('user/', CustomerView.as_view(), name='user-view'),
     path('store/', StoreView.as_view(), name='store-create'),
     path('basket/', BasketView.as_view(), name='basket-view'),

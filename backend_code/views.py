@@ -121,12 +121,9 @@ class LoginView(APIView):
         return JsonResponse({'Status': False, 'Error': 'Please provide email and password'})
 
 
-class ProductView(APIView):
-    pass
-
-
 class ProductViewSet(viewsets.ModelViewSet):
 
+    # get product by slug (stock number), search by name/model, delete product (with auth)
     queryset = Product.objects.all()
     lookup_field = 'slug'
     serializer_class = ProductSerializer
@@ -137,68 +134,22 @@ class ProductViewSet(viewsets.ModelViewSet):
             self.permission_classes = [IsLoggedIn]
         return super().get_permissions()
 
-'''
-    # get product by number
-    def get(self, request, *args, **kwargs):
-        if {'stock_number'}.issubset(request.data):
-            try:
-                current_product = Product.objects.filter(stock_number=request.data['stock_number']).first()
-                if not current_product:
-                    return JsonResponse({'Status': False, 'Error': 'Product not found'})
-                else:
-                    product__ = ProductSerializer(current_product)
-                    return Response(product__.data)
-            except ValueError as err:
-                return JsonResponse({'Status': False, 'Error': 'Invalid stock number'})
-        return JsonResponse({'Status': False, 'Error': 'Please provide stock number'})
-
-    # product delete
-    def delete(self, request, *args, **kwargs):
-        if {'email_login', 'stock_number'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                try:
-                    current_product = Product.objects.filter(stock_number=request.data['stock_number']).first()
-                    if not current_product:
-                        return JsonResponse({'Status': False, 'Error': 'Product with this stock number not found'})
-                    else:
-                        current_product.delete()
-                        return JsonResponse({'Status': True, 'Message': 'Item with this stock number has been deleted from the database'})
-                except ValueError as err:
-                    return JsonResponse({'Status': False, 'Error': 'Invalid stock number'})
-        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
-'''
 
 class VendorSupply(APIView):
+
+    permission_classes = [IsLoggedIn,]
 
     # update vendor's product list
     def post(self, request, *args, **kwargs):
         if {'email_login'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                file = "goods_yaml.yaml"
-                import_product_list_async.delay(file, request.data)
-                return JsonResponse({'Status': True, 'Message': 'Details will be sent to your email'})
+            # current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
+            # if json_auth_err:
+            #     return json_auth_err
+            # else:
+            file = "goods_yaml.yaml"
+            import_product_list_async.delay(file, request.data)
+            return JsonResponse({'Status': True, 'Message': 'Details will be sent to your email'})
         return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
-
-
-class ProductSearchView(APIView):
-
-    # product search by name or model
-    def get(self, request, *args, **kwargs):
-        try:
-            current_product = Product.objects.filter(Q(name__icontains=request.data['name']) & Q(model__icontains=request.data['model'])).all()
-            if not current_product:
-                return JsonResponse({'Status': False, 'Error': 'Product not found'})
-            else:
-                product__ = ProductSerializer(current_product, many=True)
-                return Response(product__.data)
-        except MultiValueDictKeyError as err:
-            return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
 
 class CustomerView(APIView):
