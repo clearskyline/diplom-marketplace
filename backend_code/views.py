@@ -77,18 +77,18 @@ def order_confirmation_email(user, order, request):
     send_mail_async.delay(email_subject, email_body, settings.EMAIL_FROM_USER, [user.email_login])
 
 
-def custom_authenticate(email):
-    current_customer = Customer.objects.filter(email_login=email).first()
-    if not current_customer:
-        return None, JsonResponse({'Status': False, 'Error': 'Customer with this email does not exist'})
-    else:
-        token = Token.objects.filter(user=current_customer).first()
-        if not token:
-            return None, JsonResponse({'Status': False, 'Error': 'Login required'})
-        else:
-            if token.created < datetime.now() - timedelta(hours=1):
-                return None, JsonResponse({'Status': False, 'Error': 'Login required'})
-            return current_customer, None
+# def custom_authenticate(email):
+#     current_customer = Customer.objects.filter(email_login=email).first()
+#     if not current_customer:
+#         return None, JsonResponse({'Status': False, 'Error': 'Customer with this email does not exist'})
+#     else:
+#         token = Token.objects.filter(user=current_customer).first()
+#         if not token:
+#             return None, JsonResponse({'Status': False, 'Error': 'Login required'})
+#         else:
+#             if token.created < datetime.now() - timedelta(hours=1):
+#                 return None, JsonResponse({'Status': False, 'Error': 'Login required'})
+#             return current_customer, None
 
 
 class LoginView(APIView):
@@ -130,25 +130,12 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     lookup_field = 'slug'
     serializer_class = ProductSerializer
-    # permission_classes = [IsLoggedIn]
+    search_fields = ['name', 'model']
 
     def get_permissions(self):
         if self.action == "destroy":
             self.permission_classes = [IsLoggedIn]
         return super().get_permissions()
-
-    # @action(methods=["DELETE"], detail=False)
-    # def my_destroy(self, request, *args, **kwargs):
-        # instance = self.get_object()
-        # self.perform_destroy(instance)
-
-        # del_prod = self.queryset.filter(stock_number=request.data['stock_number']).first()
-        # del_prod.delete()
-        # return JsonResponse({'Status': True, 'Message': 'OK'})
-
-
-
-
 
 '''
     # get product by number

@@ -10,3 +10,4 @@ six
 gunicorn
 celery
 redis
+django-filter
