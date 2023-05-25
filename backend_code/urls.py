@@ -1,7 +1,14 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
-from backend_code.views import VendorSupply, CustomerView, StoreView, BasketView, ProductView, StoreCatView, \
-    ProductCatView, LoginView, OrderView, ProductSearchView, OrderDetailView, activate_user, ProductExportView
+from backend_code.views import VendorSupply, CustomerView, StoreView, BasketView, StoreCatView, \
+    ProductCatView, LoginView, OrderView, ProductSearchView, OrderDetailView, activate_user, ProductExportView, \
+    ProductViewSet, ProductView
+
+
+router = DefaultRouter()
+router.register(r'goods', ProductViewSet, basename="product-set")
+
 
 app_name = 'backend_code'
 urlpatterns = [
@@ -18,5 +25,6 @@ urlpatterns = [
     path('order-detail/', OrderDetailView.as_view(), name='order-detail-view'),
     path('email-activation/<uidb64>/<token>/', activate_user, name='activate-by-mail'),
     path('product-export/', ProductExportView.as_view(), name='export_product_list'),
+    path('', include(router.urls)),
 ]
 

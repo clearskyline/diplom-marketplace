@@ -13,9 +13,11 @@ from django.template.loader import render_to_string
 from django.utils.datastructures import MultiValueDictKeyError
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from rest_framework import viewsets
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from datetime import datetime, timedelta
@@ -23,6 +25,7 @@ import yaml
 
 from backend_code.models import Product, ProductCategory, Store, Customer, Basket, ProductParameters, StoreCategory, \
     Order
+from backend_code.permissions import IsLoggedIn
 from backend_code.serializers import ProductSerializer, CustomerSerializer, StoreSerializer, BasketSerializer, \
     StoreCatSerializer, ProdCatSerializer, OrderSerializer, OrderItemSerializer
 from backend_code.token_gen import generate_token
@@ -60,7 +63,6 @@ def activate_user(request, uidb64, token):
         return render(request, 'authentication/activate-success.html', {'user': user})
 
     return render(request, 'authentication/activate-failed.html', {'user': user})
-
 
 
 def order_confirmation_email(user, order, request):
@@ -118,7 +120,34 @@ class LoginView(APIView):
 
 
 class ProductView(APIView):
+    pass
 
+
+class ProductViewSet(viewsets.ModelViewSet):
+    # def get_permissions(self):
+        # Your logic should be all here
+        # if self.request.method == 'DELETE':
+        #     self.permission_classes = [IsLoggedIn, ]
+        # else:
+        #     self.permission_classes = [IsLoggedIn, ]
+        #
+        # return super(ProductViewSet, self).get_permissions()
+
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsLoggedIn]
+
+
+    # def destroy(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     self.perform_destroy(instance)
+    #     return JsonResponse({'Status': True, 'Message': 'OK'})
+
+
+
+
+
+'''
     # get product by number
     def get(self, request, *args, **kwargs):
         if {'stock_number'}.issubset(request.data):
@@ -150,7 +179,7 @@ class ProductView(APIView):
                 except ValueError as err:
                     return JsonResponse({'Status': False, 'Error': 'Invalid stock number'})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
-
+'''
 
 class VendorSupply(APIView):
 
