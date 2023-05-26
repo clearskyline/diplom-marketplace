@@ -212,13 +212,14 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
+    # http_method_names = ['GET', 'DELETE']
     permission_classes = [IsLoggedIn,]
 
     def get_object(self):
         return Customer.objects.get(email_login=self.request.data['email_login'])
 
-    def list(self, request, *args, **kwargs):
-        return super().retrieve(self, request, *args, **kwargs)
+    # def list(self, request, *args, **kwargs):
+    #     return super().retrieve(self, request, *args, **kwargs)
 
     # @action(detail=False, methods=['GET'])
     # def list(self, request, *args, **kwargs):

@@ -8,11 +8,12 @@ from backend_code.views import VendorSupply, CustomerView, StoreView, BasketView
 
 router = DefaultRouter()
 router.register(r'goods', ProductViewSet, basename="product-set")
-router.register(r'customers', CustomerViewSet, basename="customer-set")
+# router.register(r'customers', CustomerViewSet.as_view({'get': 'retrieve', 'delete': 'destroy'}), basename="customer-set")
 
 
 app_name = 'backend_code'
 urlpatterns = [
+    path('customers/', CustomerViewSet.as_view({'get': 'retrieve', 'delete': 'destroy'}), name='customer-set'),
     # path('products/', ProductView.as_view(), name='product_page'),
     path('goods-import/', VendorSupply.as_view(), name='import_goods_page'),
     # path('product-search/', ProductSearchView.as_view(), name='search_product'),
