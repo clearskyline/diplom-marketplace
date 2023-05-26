@@ -20,10 +20,12 @@ from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from rest_framework.decorators import action, permission_classes, api_view
+from rest_framework.generics import RetrieveDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from datetime import datetime, timedelta
 import yaml
+from rest_framework.viewsets import ViewSet
 
 from backend_code.models import Product, ProductCategory, Store, Customer, Basket, ProductParameters, StoreCategory, \
     Order
@@ -142,10 +144,6 @@ class VendorSupply(APIView):
     # update vendor's product list
     def post(self, request, *args, **kwargs):
         if {'email_login'}.issubset(request.data):
-            # current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            # if json_auth_err:
-            #     return json_auth_err
-            # else:
             file = "goods_yaml.yaml"
             import_product_list_async.delay(file, request.data)
             return JsonResponse({'Status': True, 'Message': 'Details will be sent to your email'})
@@ -208,17 +206,28 @@ class CustomerView(APIView):
                     return JsonResponse({'Status': False, 'Error': customer__.errors})
         return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
 
-    # user view
-    def get(self, request, *args, **kwargs):
-        if {'email_login'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                serializer = CustomerSerializer(current_customer)
-                return Response(serializer.data)
-        return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
 
+# class CustomerViewSet(RetrieveDestroyAPIView):
+class CustomerViewSet(viewsets.ModelViewSet):
+
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+
+    def get_object(self):
+        return self.request.data['email_login']
+
+    # user view
+    # def retrieve(self, request, *args, **kwargs):
+    #     if {'email_login'}.issubset(request.data):
+    #         current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
+    #         if json_auth_err:
+    #             return json_auth_err
+    #         else:
+    #             serializer = CustomerSerializer(current_customer)
+    #             return Response(serializer.data)
+    #     return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
+
+'''
     # user delete
     def delete(self, request, *args, **kwargs):
         if {'email_login'}.issubset(request.data):
@@ -230,7 +239,7 @@ class CustomerView(APIView):
                 return JsonResponse(
                     {'Status': True, 'Message': 'Customer account has been deleted'})
         return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
-
+'''
 
 class StoreView(APIView):
 

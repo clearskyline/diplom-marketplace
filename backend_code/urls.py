@@ -3,11 +3,12 @@ from rest_framework.routers import DefaultRouter
 
 from backend_code.views import VendorSupply, CustomerView, StoreView, BasketView, StoreCatView, \
     ProductCatView, LoginView, OrderView, OrderDetailView, activate_user, ProductExportView, \
-    ProductViewSet
+    ProductViewSet, CustomerViewSet
 
 
 router = DefaultRouter()
 router.register(r'goods', ProductViewSet, basename="product-set")
+router.register(r'customers', CustomerViewSet, basename="customer-set")
 
 
 app_name = 'backend_code'
