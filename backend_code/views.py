@@ -29,7 +29,7 @@ from rest_framework.viewsets import ViewSet
 
 from backend_code.models import Product, ProductCategory, Store, Customer, Basket, ProductParameters, StoreCategory, \
     Order
-from backend_code.permissions import IsLoggedIn
+from backend_code.permissions import IsLoggedIn, IsAccountOwner
 from backend_code.serializers import ProductSerializer, CustomerSerializer, StoreSerializer, BasketSerializer, \
     StoreCatSerializer, ProdCatSerializer, OrderSerializer, OrderItemSerializer
 from backend_code.token_gen import generate_token
@@ -212,9 +212,24 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
+    permission_classes = [IsLoggedIn,]
 
     def get_object(self):
-        return self.request.data['email_login']
+        return Customer.objects.get(email_login=self.request.data['email_login'])
+
+    def list(self, request, *args, **kwargs):
+        return super().retrieve(self, request, *args, **kwargs)
+
+    # @action(detail=False, methods=['GET'])
+    # def list(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(instance)
+    #     return Response(serializer.data)
+
+    # def get_permissions(self):
+    #     if self.action == "retrieve":
+    #         self.permission_classes = [IsLoggedIn]
+    #     return super().get_permissions()
 
     # user view
     # def retrieve(self, request, *args, **kwargs):
