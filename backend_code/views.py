@@ -8,6 +8,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
+from django.core.serializers import get_serializer
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q
 from django.forms import forms
@@ -21,6 +22,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from rest_framework.decorators import action, permission_classes, api_view
 from rest_framework.generics import RetrieveDestroyAPIView
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from datetime import datetime, timedelta
@@ -29,7 +31,7 @@ from rest_framework.viewsets import ViewSet
 
 from backend_code.models import Product, ProductCategory, Store, Customer, Basket, ProductParameters, StoreCategory, \
     Order
-from backend_code.permissions import IsLoggedIn, IsAccountOwner
+from backend_code.permissions import IsLoggedIn
 from backend_code.serializers import ProductSerializer, CustomerSerializer, StoreSerializer, BasketSerializer, \
     StoreCatSerializer, ProdCatSerializer, OrderSerializer, OrderItemSerializer
 from backend_code.token_gen import generate_token
@@ -150,7 +152,7 @@ class VendorSupply(APIView):
         return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
 
 
-class CustomerView(APIView):
+class CustomerSignUp(APIView):
 
     # user signup
     def post(self, request, *args, **kwargs):
@@ -178,84 +180,37 @@ class CustomerView(APIView):
                 return JsonResponse({'Status': False, 'Error': user_serializer.errors})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
-    # user edit
-    def patch(self, request, *args, **kwargs):
-        if {'email_login'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                request.data._mutable = True
-                if request.data.get('password'):
-                    try:
-                        validate_password(request.data['password'])
-                        request.data['password'] = make_password(request.data['password'])
-                    except forms.ValidationError as password_errors:
-                        pass_errors = []
-                        for err in password_errors:
-                            pass_errors.append(err)
-                        return JsonResponse({'Status': False, 'Errors': {'password': pass_errors}})
-                if not current_customer.seller_vendor_id and request.data.get('registered_vendor'):
-                    request.data['seller_vendor_id'] = 56120
-                    # request.data['seller_vendor_id'] = random.randint(200, 20000)
-                customer__ = CustomerSerializer(current_customer, data=request.data, partial=True)
-                if customer__.is_valid():
-                    customer__.save()
-                    return Response(customer__.data)
-                else:
-                    return JsonResponse({'Status': False, 'Error': customer__.errors})
-        return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
 
-
-# class CustomerViewSet(RetrieveDestroyAPIView):
+# user view, edit, delete
 class CustomerViewSet(viewsets.ModelViewSet):
 
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    # http_method_names = ['GET', 'DELETE']
     permission_classes = [IsLoggedIn,]
 
     def get_object(self):
         return Customer.objects.get(email_login=self.request.data['email_login'])
 
-    # def list(self, request, *args, **kwargs):
-    #     return super().retrieve(self, request, *args, **kwargs)
+    # user edit
+    def update(self, request, *args, **kwargs):
+        request.data._mutable = True
+        if request.data.get('password'):
+            try:
+                validate_password(request.data['password'])
+                request.data['password'] = make_password(request.data['password'])
+            except forms.ValidationError as password_errors:
+                pass_errors = []
+                for err in password_errors:
+                    pass_errors.append(err)
+                return JsonResponse({'Status': False, 'Errors': {'password': pass_errors}})
+        current_customer = self.get_object()
+        serializer = CustomerSerializer(current_customer, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return JsonResponse({'Status': False, 'Error': serializer.errors})
 
-    # @action(detail=False, methods=['GET'])
-    # def list(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     serializer = self.get_serializer(instance)
-    #     return Response(serializer.data)
-
-    # def get_permissions(self):
-    #     if self.action == "retrieve":
-    #         self.permission_classes = [IsLoggedIn]
-    #     return super().get_permissions()
-
-    # user view
-    # def retrieve(self, request, *args, **kwargs):
-    #     if {'email_login'}.issubset(request.data):
-    #         current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-    #         if json_auth_err:
-    #             return json_auth_err
-    #         else:
-    #             serializer = CustomerSerializer(current_customer)
-    #             return Response(serializer.data)
-    #     return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
-
-'''
-    # user delete
-    def delete(self, request, *args, **kwargs):
-        if {'email_login'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                current_customer.delete()
-                return JsonResponse(
-                    {'Status': True, 'Message': 'Customer account has been deleted'})
-        return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
-'''
 
 class StoreView(APIView):
 
