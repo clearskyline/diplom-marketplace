@@ -197,7 +197,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
             return JsonResponse({'Status': False, 'Error': serializer.errors})
 
 
-# store view, delete
+# store view, create, delete
 class StoreViewSet(viewsets.ModelViewSet):
 
     queryset = Store.objects.all()
@@ -208,6 +208,7 @@ class StoreViewSet(viewsets.ModelViewSet):
         current_customer = Customer.objects.filter(email_login=self.request.data['email_login']).first()
         return Store.objects.filter(vendor_id__seller_vendor_id=current_customer.seller_vendor_id).first()
 
+    # store delete
     def destroy(self, request, *args, **kwargs):
         current_store = self.get_object()
         if current_store:
@@ -215,39 +216,34 @@ class StoreViewSet(viewsets.ModelViewSet):
             return JsonResponse({'Status': True, 'Message': 'This store has been deleted'})
         return JsonResponse({'Status': False, 'Error': 'Store not found'})
 
+    # store create
+    def create(self, request, *args, **kwargs):
+        if {'email_login', 'name', 'address', 'url', 'store_cat_id', 'nominal_delivery_price'}.issubset(request.data):
+            try:
+                current_customer = Customer.objects.filter(email_login=request.data['email_login']).first()
+                if not current_customer.registered_vendor:
+                    return JsonResponse({'Status': False, 'Error': 'You are not registered as a vendor'})
+                else:
+                    store_cat = StoreCategory.objects.filter(store_cat_id=request.data['store_cat_id']).first()
+                    if not store_cat:
+                        return JsonResponse({'Status': False, 'Error': 'Please create a category for this store'})
+                    else:
+                        request.data._mutable = True
+                        request.data['vendor_id'] = current_customer.id
+                        request.data['cats'] = store_cat.id
+                        current_store = StoreSerializer(data=request.data)
+                        if current_store.is_valid():
+                            current_store.save()
+                            return Response(current_store.data)
+                        else:
+                            return JsonResponse({'Status': False, 'Error': current_store.errors})
+            except ValueError as err:
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
+        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
 
 
-    # # store create
-    # def post(self, request, *args, **kwargs):
-    #     if {'email_login', 'name', 'address', 'url', 'store_cat_id', 'nominal_delivery_price'}.issubset(request.data):
-    #         current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-    #         if json_auth_err:
-    #             return json_auth_err
-    #         else:
-    #             try:
-    #                 if not current_customer.registered_vendor:
-    #                     return JsonResponse({'Status': False, 'Error': 'Vendor with this email does not exist'})
-    #                 else:
-    #                     store_cat = StoreCategory.objects.filter(store_cat_id=request.data['store_cat_id']).first()
-    #                     if not store_cat:
-    #                         return JsonResponse({'Status': False, 'Error': 'Please create a category for this store'})
-    #                     else:
-    #                         request.data._mutable = True
-    #                         request.data['vendor_id'] = current_customer.id
-    #                         request.data['cats'] = store_cat.id
-    #                         store__ = StoreSerializer(data=request.data)
-    #                         if store__.is_valid():
-    #                             store__.save()
-    #                             return Response(store__.data)
-    #                         else:
-    #                             return JsonResponse(
-    #                             {'Status': False,
-    #                              'Error': store__.errors})
-    #             except ValueError as err:
-    #                 return JsonResponse({'Status': False, 'Error': 'Invalid data'})
-    #     return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
-    #
+
     # # store patch
     # def patch(self, request, *args, **kwargs):
     #     if {'email_login', 'seller_vendor_id'}.issubset(request.data):
