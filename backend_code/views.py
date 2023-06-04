@@ -81,20 +81,6 @@ def order_confirmation_email(user, order, request):
     send_mail_async.delay(email_subject, email_body, settings.EMAIL_FROM_USER, [user.email_login])
 
 
-# def custom_authenticate(email):
-#     current_customer = Customer.objects.filter(email_login=email).first()
-#     if not current_customer:
-#         return None, JsonResponse({'Status': False, 'Error': 'Customer with this email does not exist'})
-#     else:
-#         token = Token.objects.filter(user=current_customer).first()
-#         if not token:
-#             return None, JsonResponse({'Status': False, 'Error': 'Login required'})
-#         else:
-#             if token.created < datetime.now() - timedelta(hours=1):
-#                 return None, JsonResponse({'Status': False, 'Error': 'Login required'})
-#             return current_customer, None
-
-
 class LoginView(APIView):
 
     # user login
@@ -145,11 +131,9 @@ class VendorSupply(APIView):
 
     # update vendor's product list
     def post(self, request, *args, **kwargs):
-        if {'email_login'}.issubset(request.data):
             file = "goods_yaml.yaml"
             import_product_list_async.delay(file, request.data)
             return JsonResponse({'Status': True, 'Message': 'Details will be sent to your email'})
-        return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
 
 
 class CustomerSignUp(APIView):
