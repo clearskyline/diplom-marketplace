@@ -189,6 +189,9 @@ class CustomerViewSet(viewsets.ModelViewSet):
                     pass_errors.append(err)
                 return JsonResponse({'Status': False, 'Errors': {'password': pass_errors}})
         current_customer = self.get_object()
+        if request.data['registered_vendor'] == 'True' and not current_customer.seller_vendor_id:
+            request.data['seller_vendor_id'] = 56120
+            # request.data['seller_vendor_id'] = random.randint(200,20000)
         serializer = CustomerSerializer(current_customer, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
