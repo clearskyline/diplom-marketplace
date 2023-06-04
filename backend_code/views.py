@@ -267,19 +267,15 @@ class StoreViewSet(viewsets.ModelViewSet):
             return JsonResponse({'Status': False, 'Error': 'Invalid data'})
 
 
-class BasketView(APIView):
+class BasketViewSet(viewsets.ModelViewSet):
 
-    # basket view
-    def get(self, request, *args, **kwargs):
-        if {'email_login'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                basket__ = Basket.objects.filter(b_customer=current_customer.id)
-                serializer = BasketSerializer(basket__, many=True)
-                return Response(serializer.data)
-        return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
+    queryset = Basket.objects.all()
+    serializer_class = BasketSerializer
+    permission_classes = [IsLoggedIn,]
+
+    def get_queryset(self):
+        current_customer = Customer.objects.filter(email_login=self.request.data['email_login']).first()
+        return Basket.objects.filter(b_customer=current_customer.id).all()
 
     # basket post
     def post(self, request, *args, **kwargs):

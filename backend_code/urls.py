@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from backend_code.views import VendorSupply, StoreViewSet, BasketView, StoreCatView, \
+from backend_code.views import VendorSupply, StoreViewSet, BasketViewSet, StoreCatView, \
     ProductCatView, LoginView, OrderView, OrderDetailView, activate_user, ProductExportView, \
     ProductViewSet, CustomerViewSet, CustomerSignUp
 
@@ -16,7 +16,7 @@ urlpatterns = [
     # path('product-search/', ProductSearchView.as_view(), name='search_product'),
     path('user-signup/', CustomerSignUp.as_view(), name='user_signup'),
     path('store/', StoreViewSet.as_view({'post': 'create', 'get': 'retrieve', 'delete': 'destroy', 'patch': 'update'}), name='store-set'),
-    path('basket/', BasketView.as_view(), name='basket-view'),
+    path('basket/', BasketViewSet.as_view({'post': 'create', 'get': 'list', 'delete': 'destroy', 'patch': 'update'}), name='basket-viewset'),
     path('store-cat/', StoreCatView.as_view(), name='store-cat-view'),
     path('prod-cat/', ProductCatView.as_view(), name='product-cat-view'),
     path('login/', LoginView.as_view(), name='login-view'),
