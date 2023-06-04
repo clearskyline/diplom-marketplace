@@ -208,6 +208,11 @@ class StoreViewSet(viewsets.ModelViewSet):
         current_customer = Customer.objects.filter(email_login=self.request.data['email_login']).first()
         return Store.objects.filter(vendor_id__seller_vendor_id=current_customer.seller_vendor_id).first()
 
+    def get_permissions(self):
+        if self.action == "retrieve":
+            self.permission_classes = [AllowAny,]
+        return super().get_permissions()
+
     # store delete
     def destroy(self, request, *args, **kwargs):
         current_store = self.get_object()
