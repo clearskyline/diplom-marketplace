@@ -57,7 +57,7 @@ class Product(models.Model):
     slug = models.SlugField(unique=True, max_length=100, db_index=True, verbose_name='product_URL')
     name = models.CharField(max_length=250)
     model = models.CharField(max_length=250, null=True, blank=True)
-    delivery_store = models.ManyToManyField(Store, related_name='delivery_by_store')
+    delivery_store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='delivery_by_store')
     amount = models.PositiveIntegerField()
     price = models.PositiveIntegerField()
     weight_class = models.PositiveIntegerField()

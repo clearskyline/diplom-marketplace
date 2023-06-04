@@ -277,26 +277,25 @@ class BasketViewSet(viewsets.ModelViewSet):
         current_customer = Customer.objects.filter(email_login=self.request.data['email_login']).first()
         return Basket.objects.filter(b_customer=current_customer.id).all()
 
-    # basket post
-    def post(self, request, *args, **kwargs):
+    # basket create and update
+    def create(self, request, *args, **kwargs):
         if {'email_login', 'stock_number', 'amount'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                try:
-                    basket_product = Product.objects.filter(stock_number=request.data['stock_number']).first()
-                    basket_vendor = Store.objects.filter(delivery_by_store=basket_product, status=True).first()
-                    if basket_product and basket_vendor:
-                        new_purchase_item, _ = Basket.objects.update_or_create(b_product=basket_product,
-                         b_customer=current_customer,
-                         b_vendor=basket_vendor,
-                         defaults={'amount': request.data['amount']})
-                        basket__ = BasketSerializer(new_purchase_item)
-                        return Response(basket__.data)
-                    return JsonResponse({'Status': False, 'Errors': 'Product or store not found'})
-                except ValueError as err:
-                    return JsonResponse({'Status': False, 'Error': 'Invalid data'})
+            try:
+                current_customer = Customer.objects.filter(email_login=self.request.data['email_login']).first()
+                basket_product = Product.objects.filter(stock_number=request.data['stock_number']).first()
+                basket_vendor = Store.objects.filter(delivery_by_store=basket_product, status=True).first()
+                print(basket_product)
+                print(basket_vendor)
+                if basket_product and basket_vendor:
+                    new_purchase_item, _ = Basket.objects.update_or_create(b_product=basket_product,
+                     b_customer=current_customer,
+                     b_vendor=basket_vendor,
+                     defaults={'amount': request.data['amount']})
+                    basket_serializer = BasketSerializer(new_purchase_item)
+                    return Response(basket_serializer.data)
+                return JsonResponse({'Status': False, 'Errors': 'Product or store not found'})
+            except ValueError as err:
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
     # basket delete
