@@ -197,7 +197,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
             return JsonResponse({'Status': False, 'Error': serializer.errors})
 
 
-# store view, create, delete
+# store view, create, update, delete
 class StoreViewSet(viewsets.ModelViewSet):
 
     queryset = Store.objects.all()
@@ -246,38 +246,25 @@ class StoreViewSet(viewsets.ModelViewSet):
                 return JsonResponse({'Status': False, 'Error': 'Invalid data'})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
-
-
-
-    # # store patch
-    # def patch(self, request, *args, **kwargs):
-    #     if {'email_login', 'seller_vendor_id'}.issubset(request.data):
-    #         current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-    #         if json_auth_err:
-    #             return json_auth_err
-    #         else:
-    #             try:
-    #                 if str(current_customer.seller_vendor_id) != request.data['seller_vendor_id']:
-    #                     return JsonResponse({'Status': False, 'Error': 'You cannot update this store data'})
-    #                 if request.data.get('store_cat_id'):
-    #                     current_store_cat = StoreCategory.objects.filter(store_cat_id=request.data.get('store_cat_id')).first()
-    #                     if not current_store_cat:
-    #                         return JsonResponse({'Status': False, 'Error': 'Store category not found'})
-    #                     else:
-    #                         request.data._mutable = True
-    #                         request.data['cats'] = current_store_cat.id
-    #                 current_store = Store.objects.filter(     vendor_id__seller_vendor_id=request.data['seller_vendor_id']).first()
-    #                 store__ = StoreSerializer(current_store, data=request.data, partial=True)
-    #                 if store__.is_valid():
-    #                     store__.save()
-    #                     return Response(store__.data)
-    #                 else:
-    #                     return JsonResponse(
-    #                         {'Status': False,
-    #                          'Error': store__.errors})
-    #             except ValueError as err:
-    #                 return JsonResponse({'Status': False, 'Error': 'Invalid data'})
-    #     return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+    # store update
+    def update(self, request, *args, **kwargs):
+        try:
+            if request.data.get('store_cat_id'):
+                current_store_cat = StoreCategory.objects.filter(store_cat_id=request.data.get('store_cat_id')).first()
+                if not current_store_cat:
+                    return JsonResponse({'Status': False, 'Error': 'Store category not found'})
+                else:
+                    request.data._mutable = True
+                    request.data['cats'] = current_store_cat.id
+                current_store = self.get_object()
+                serializer = StoreSerializer(current_store, data=request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data)
+                else:
+                    return JsonResponse({'Status': False, 'Error': serializer.errors})
+        except ValueError as err:
+            return JsonResponse({'Status': False, 'Error': 'Invalid data'})
 
 
 class BasketView(APIView):
