@@ -2,12 +2,17 @@ from rest_framework import serializers
 from backend_code.models import Product, Store, Customer, Basket, StoreCategory, ProductCategory, Order, OrderItems
 
 
+class CustomerSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Customer
+        fields = ['id', 'user_name', 'email_login', 'password', 'email_verified', 'first_name', 'last_name', 'phone_number', 'address', 'registered_vendor', 'is_active', 'organization', 'area_code', 'seller_vendor_id']
+        read_only_fields = ['id',]
+        extra_kwargs = {'password': {'write_only': True, 'min_length': 4}}
+
+
 class StoreSerializer(serializers.ModelSerializer):
     seller_vendor = serializers.IntegerField(source='vendor_id.seller_vendor_id', read_only=True)
-    # extra_kwargs = {
-        # 'model_b_ids': {'write_only': True},
-        # 'vendor_id': {'read_only': True}
-    # }
 
     class Meta:
         model = Store
@@ -21,15 +26,6 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['stock_number', 'name', 'model', 'delivery_store', 'amount', 'price', 'recommended_price', 'weight_class']
         lookup_field = 'slug'
-
-
-class CustomerSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Customer
-        fields = ['id', 'user_name', 'email_login', 'password', 'email_verified', 'first_name', 'last_name', 'phone_number', 'address', 'registered_vendor', 'is_active', 'organization', 'area_code', 'seller_vendor_id']
-        read_only_fields = ['id',]
-        extra_kwargs = {'password': {'write_only': True, 'min_length': 4}}
 
 
 class BasketSerializer(serializers.ModelSerializer):

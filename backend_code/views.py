@@ -132,9 +132,9 @@ class VendorSupply(APIView):
 
     # update vendor's product list
     def post(self, request, *args, **kwargs):
-            file = "goods_yaml.yaml"
-            import_product_list_async.delay(file, request.data)
-            return JsonResponse({'Status': True, 'Message': 'Details will be sent to your email'})
+        file = "goods_yaml.yaml"
+        import_product_list_async.delay(file, request.data)
+        return JsonResponse({'Status': True, 'Message': 'Details will be sent to your email'})
 
 
 class CustomerSignUp(APIView):
@@ -197,6 +197,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
             return JsonResponse({'Status': False, 'Error': serializer.errors})
 
 
+# store view, delete
 class StoreViewSet(viewsets.ModelViewSet):
 
     queryset = Store.objects.all()
@@ -204,28 +205,19 @@ class StoreViewSet(viewsets.ModelViewSet):
     permission_classes = [IsLoggedIn,]
 
     def get_object(self):
-        try:
-            current_customer = Customer.objects.get(email_login=self.request.data['email_login'])
-            current_store = Store.objects.get(vendor_id__email_login=current_customer.email_login)
-        except ObjectDoesNotExist:
-            return None
+        current_customer = Customer.objects.filter(email_login=self.request.data['email_login']).first()
+        return Store.objects.filter(vendor_id__seller_vendor_id=current_customer.seller_vendor_id).first()
 
-    # store view
-    # def get(self, request, *args, **kwargs):
-    #     if {'seller_vendor_id'}.issubset(request.data):
-    #         try:
-    #             current_store = Store.objects.filter(vendor_id__seller_vendor_id=request.data['seller_vendor_id']).first()
-    #             if not current_store:
-    #                 return JsonResponse({'Status': False, 'Error': 'Store with this vendor id not found'})
-    #             if current_store.status:
-    #                 store__ = StoreSerializer(current_store).data
-    #                 return Response(store__)
-    #             else:
-    #                 return JsonResponse({'Status': False, 'Error': 'Store is not active'})
-    #         except ValueError as err:
-    #             return JsonResponse({'Status': False, 'Error': 'Invalid seller ID'})
-    #     return JsonResponse({'Status': False, 'Error': 'Please provide your seller ID'})
-    #
+    def destroy(self, request, *args, **kwargs):
+        current_store = self.get_object()
+        if current_store:
+            current_store.delete()
+            return JsonResponse({'Status': True, 'Message': 'This store has been deleted'})
+        return JsonResponse({'Status': False, 'Error': 'Store not found'})
+
+
+
+
     # # store create
     # def post(self, request, *args, **kwargs):
     #     if {'email_login', 'name', 'address', 'url', 'store_cat_id', 'nominal_delivery_price'}.issubset(request.data):
@@ -285,22 +277,6 @@ class StoreViewSet(viewsets.ModelViewSet):
     #             except ValueError as err:
     #                 return JsonResponse({'Status': False, 'Error': 'Invalid data'})
     #     return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
-
-    # store delete
-    # def delete(self, request, *args, **kwargs):
-    #     if {'email_login'}.issubset(request.data):
-    #         current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-    #         if json_auth_err:
-    #             return json_auth_err
-    #         else:
-    #             current_vendor = Store.objects.filter(vendor_id=current_customer.id).first()
-    #             if not current_vendor:
-    #                 return JsonResponse({'Status': False, 'Error': 'Store not found'})
-    #             else:
-    #                 current_vendor.delete()
-    #                 return JsonResponse(
-    #                     {'Status': True, 'Message': 'This store has been deleted'})
-    #     return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
 
 
 class BasketView(APIView):
