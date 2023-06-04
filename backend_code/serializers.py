@@ -4,6 +4,10 @@ from backend_code.models import Product, Store, Customer, Basket, StoreCategory,
 
 class StoreSerializer(serializers.ModelSerializer):
     seller_vendor = serializers.IntegerField(source='vendor_id.seller_vendor_id', read_only=True)
+    # extra_kwargs = {
+        # 'model_b_ids': {'write_only': True},
+        # 'vendor_id': {'read_only': True}
+    # }
 
     class Meta:
         model = Store
