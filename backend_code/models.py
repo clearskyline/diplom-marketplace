@@ -52,6 +52,19 @@ class ProductParameters(models.Model):
     color = models.CharField(max_length=50)
 
 
+class ProductCategory(models.Model):
+    prod_cat_id = models.PositiveIntegerField()
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        verbose_name = 'Product category'
+        verbose_name_plural = 'Product categories'
+        ordering = ('-name',)
+
+    def __str__(self):
+        return self.name
+
+
 class Product(models.Model):
     stock_number = models.PositiveIntegerField(unique=True)
     slug = models.SlugField(unique=True, max_length=100, db_index=True, verbose_name='product_URL')
@@ -60,6 +73,7 @@ class Product(models.Model):
     delivery_store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='delivery_by_store')
     amount = models.PositiveIntegerField()
     price = models.PositiveIntegerField()
+    product_cat = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, related_name='pr_category', blank=True)
     weight_class = models.PositiveIntegerField()
     recommended_price = models.PositiveIntegerField()
     custom_parameters = models.ManyToManyField(ProductParameters, related_name='parameters_by_product')
@@ -77,20 +91,6 @@ class Product(models.Model):
 
     def __str__(self):
         return f'{self.stock_number} ({self.name} - {self.price} руб.)'
-
-
-class ProductCategory(models.Model):
-    prod_cat_id = models.PositiveIntegerField()
-    name = models.CharField(max_length=50)
-    products_by_cat = models.ManyToManyField(Product, related_name='prods', blank=True)
-
-    class Meta:
-        verbose_name = 'Product category'
-        verbose_name_plural = 'Product categories'
-        ordering = ('-name',)
-
-    def __str__(self):
-        return self.name
 
 
 class Customer(AbstractBaseUser):

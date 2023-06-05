@@ -20,12 +20,13 @@ class StoreSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    delivery_store = StoreSerializer(read_only=True, many=True)
+    delivery_store = serializers.StringRelatedField(source='store.id')
 
     class Meta:
         model = Product
         fields = ['stock_number', 'name', 'model', 'delivery_store', 'amount', 'price', 'recommended_price', 'weight_class']
         lookup_field = 'slug'
+        # extra_kwargs = {'delivery_store': {'read_only': True}}
 
 
 class BasketSerializer(serializers.ModelSerializer):
@@ -50,7 +51,7 @@ class ProdCatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductCategory
-        fields = ['id', 'prod_cat_id', 'name']
+        fields = ['id', 'name']
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

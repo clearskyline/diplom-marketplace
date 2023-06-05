@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import ObjectDoesNotExist
+# from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMessage
 from django.core.serializers import get_serializer
 from django.core.serializers.json import DjangoJSONEncoder
@@ -251,23 +251,26 @@ class StoreViewSet(viewsets.ModelViewSet):
 
     # store update
     def update(self, request, *args, **kwargs):
-        try:
-            if request.data.get('store_cat_id'):
-                current_store_cat = StoreCategory.objects.filter(store_cat_id=request.data.get('store_cat_id')).first()
-                if not current_store_cat:
-                    return JsonResponse({'Status': False, 'Error': 'Store category not found'})
-                else:
-                    request.data._mutable = True
-                    request.data['cats'] = current_store_cat.id
-                current_store = self.get_object()
-                serializer = StoreSerializer(current_store, data=request.data, partial=True)
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(serializer.data)
-                else:
-                    return JsonResponse({'Status': False, 'Error': serializer.errors})
-        except ValueError as err:
-            return JsonResponse({'Status': False, 'Error': 'Invalid data'})
+        current_store = self.get_object()
+        if current_store:
+            try:
+                if request.data.get('store_cat_id'):
+                    current_store_cat = StoreCategory.objects.filter(store_cat_id=request.data.get('store_cat_id')).first()
+                    if not current_store_cat:
+                        return JsonResponse({'Status': False, 'Error': 'Store category not found'})
+                    else:
+                        request.data._mutable = True
+                        request.data['cats'] = current_store_cat.id
+                    serializer = StoreSerializer(current_store, data=request.data, partial=True)
+                    if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data)
+                    else:
+                        return JsonResponse({'Status': False, 'Error': serializer.errors})
+            except ValueError as err:
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
+        else:
+            return JsonResponse({'Status': False, 'Error': 'Store not found'})
 
 
 class BasketViewSet(viewsets.ModelViewSet):
