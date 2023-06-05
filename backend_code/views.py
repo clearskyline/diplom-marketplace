@@ -479,24 +479,20 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response(order_set_ser.data)
 
     # order delete
-    def delete(self, request, *args, **kwargs):
-        if {'email_login', 'order_number'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                try:
-                    order__ = Order.objects.filter(order_number=request.data['order_number'], order_customer=current_customer).first()
-                    if order__:
-                        if order__.status == 'new' or order__.status == 'confirmed' or order__.status == 'assembled':
-                            order__.delete()
-                        else:
-                            return JsonResponse({'Status': False, 'Error': f'Order {request.data["order_number"]} cannot be deleted as it has already been dispatched. If you dont pick it up, it will be automatically cancelled'})
+    def destroy(self, request, *args, **kwargs):
+        if {'order_number'}.issubset(request.data):
+            try:
+                current_order = self.get_queryset().filter(order_number=request.data['order_number']).first()
+                if not current_order:
+                    return JsonResponse({'Status': False, 'Error': 'Order not found'})
+                else:
+                    if current_order.status == 'new' or current_order.status == 'confirmed' or current_order.status == 'assembled':
+                        current_order.delete()
                         return JsonResponse({'Status': True, 'Message': f'Order {request.data["order_number"]} deleted'})
                     else:
-                        return JsonResponse({'Status': False, 'Error': 'Order not found'})
-                except ValueError as err:
-                    return JsonResponse({'Status': False, 'Error': 'Invalid order number'})
+                        return JsonResponse({'Status': False, 'Error': f'Order {request.data["order_number"]} cannot be deleted as it has already been dispatched. If you dont pick it up, it will be automatically cancelled'})
+            except ValueError as err:
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
         return JsonResponse({'Status': False, 'Error': 'Please provide order number'})
 
 
