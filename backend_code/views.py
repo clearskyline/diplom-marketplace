@@ -11,6 +11,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
 from django.core.serializers import get_serializer
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import IntegrityError
 from django.db.models import Q
 from django.forms import forms
 from django.template.loader import render_to_string
@@ -340,8 +341,8 @@ class StoreCatViewSet(viewsets.ModelViewSet):
                 store_cat, _ = StoreCategory.objects.update_or_create(store_cat_id=store_cat_id, store_cat_creator=current_customer, defaults={'name': request.data['name']})
                 store_cat__ser = StoreCatSerializer(store_cat)
                 return Response(store_cat__ser.data)
-            except ValueError as err:
-                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
+            except IntegrityError as err:
+                return JsonResponse({'Status': False, 'Error': 'Category cannot be updated.'})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
     # store category view
