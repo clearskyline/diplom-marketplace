@@ -261,12 +261,12 @@ class StoreViewSet(viewsets.ModelViewSet):
                     else:
                         request.data._mutable = True
                         request.data['cats'] = current_store_cat.id
-                    serializer = StoreSerializer(current_store, data=request.data, partial=True)
-                    if serializer.is_valid():
-                        serializer.save()
-                        return Response(serializer.data)
-                    else:
-                        return JsonResponse({'Status': False, 'Error': serializer.errors})
+                serializer = StoreSerializer(current_store, data=request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data)
+                else:
+                    return JsonResponse({'Status': False, 'Error': serializer.errors})
             except ValueError as err:
                 return JsonResponse({'Status': False, 'Error': 'Invalid data'})
         else:
