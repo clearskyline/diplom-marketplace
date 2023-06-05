@@ -381,63 +381,32 @@ class ProductCatViewSet(viewsets.ModelViewSet):
             self.permission_classes = [AllowAny,]
         return super().get_permissions()
 
-    # product category view
-    # def get(self, request, *args, **kwargs):
-    #     if {'email_login', 'prod_cat_id'}.issubset(request.data):
-    #         current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-    #         if json_auth_err:
-    #             return json_auth_err
-    #         else:
-    #             try:
-    #                 prod_cat__ = ProductCategory.objects.filter(prod_cat_id=request.data['prod_cat_id']).first()
-    #                 if prod_cat__:
-    #                     prod_cat__json = ProdCatSerializer(prod_cat__)
-    #                     return Response(prod_cat__json.data)
-    #                 else:
-    #                     return JsonResponse({'Status': False, 'Error': 'Product category not found'})
-    #             except ValueError as err:
-    #                 return JsonResponse({'Status': False, 'Error': 'Invalid category ID'})
-    #     return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
-
     # product category create/update
-    def post(self, request, *args, **kwargs):
-        if {'email_login', 'name'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
+    def create(self, request, *args, **kwargs):
+        if {'name'}.issubset(request.data):
+            if request.data.get('prod_cat_id'):
+                prod_cat_id = request.data.get('prod_cat_id')
             else:
-                try:
-                    if request.data.get('prod_cat_id'):
-                        prod_cat_id = request.data.get('prod_cat_id')
-                    else:
-                        prod_cat_id = random.randint(100, 2000000)
-                    prod_cat, _ = ProductCategory.objects.update_or_create(prod_cat_id=prod_cat_id, defaults={'name': request.data['name']})
-                    prod_cat__json = ProdCatSerializer(prod_cat)
-                    return Response(prod_cat__json.data)
-                except ValueError as err:
-                    return JsonResponse({'Status': False, 'Error': 'Invalid category ID'})
+                prod_cat_id = random.randint(100, 2000000)
+            try:
+                prod_cat, _ = ProductCategory.objects.update_or_create(prod_cat_id=prod_cat_id, defaults={'name': request.data['name']},)
+                return Response(ProdCatSerializer(prod_cat).data)
+            except ValueError as err:
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
     # product category delete
-    def delete(self, request, *args, **kwargs):
-        if {'email_login', 'prod_cat_id'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                try:
-                    prod_cat_ = ProductCategory.objects.filter(prod_cat_id=request.data['prod_cat_id']).first()
-                    if prod_cat_:
-                        products_check = Product.objects.filter(prods=prod_cat_).first()
-                        if not products_check:
-                            prod_cat_.delete()
-                            return JsonResponse({'Status': True, 'Message': 'Product category deleted'})
-                        else:
-                            return JsonResponse({'Status': False, 'Message': 'Product category not empty'})
-                    else:
-                        return JsonResponse({'Status': False, 'Error': 'Product category not found'})
-                except ValueError as err:
-                    return JsonResponse({'Status': False, 'Error': 'Invalid category ID'})
+    def destroy(self, request, *args, **kwargs):
+        if {'prod_cat_id'}.issubset(request.data):
+            try:
+                current_pr_cat = self.get_object()
+                if current_pr_cat:
+                    current_pr_cat.delete()
+                    return JsonResponse({'Status': True, 'Message': 'Product category deleted'})
+                else:
+                    return JsonResponse({'Status': False, 'Error': 'Product category not found'})
+            except ValueError as err:
+                    return JsonResponse({'Status': False, 'Error': 'Invalid data'})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
 

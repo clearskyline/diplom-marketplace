@@ -23,7 +23,7 @@ class ProdCatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductCategory
-        fields = ['id', 'name']
+        fields = ['id', 'prod_cat_id', 'name']
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -60,7 +60,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItems
-        fields = ['number_of_order', 'order_product', 'order_prod_vendor', 'order_prod_amount']
+        fields = ['id', 'number_of_order', 'order_product', 'order_prod_vendor', 'order_prod_amount']
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -68,4 +68,4 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['order_number', 'order_customer', 'area_code', 'total_price', 'final_delivery_price', 'express_delivery', 'status', 'order_items_number']
+        fields = ['id', 'order_number', 'order_customer', 'area_code', 'total_price', 'final_delivery_price', 'express_delivery', 'status', 'order_items_number']
