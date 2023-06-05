@@ -16,7 +16,7 @@ class IsLoggedIn(BasePermission):
         return False
 
 
-# class IsAccountOwner(BasePermission):
-#
-#     def has_object_permission(self, request, view, obj):
-#         return obj.email_login == request.data['email_login']
+class IsProductOwner(BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        return obj.delivery_store.vendor_id.email_login == request.data['email_login']

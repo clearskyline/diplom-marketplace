@@ -32,7 +32,7 @@ from rest_framework.viewsets import ViewSet
 
 from backend_code.models import Product, ProductCategory, Store, Customer, Basket, ProductParameters, StoreCategory, \
     Order
-from backend_code.permissions import IsLoggedIn
+from backend_code.permissions import IsLoggedIn, IsProductOwner
 from backend_code.serializers import ProductSerializer, CustomerSerializer, StoreSerializer, BasketSerializer, \
     StoreCatSerializer, ProdCatSerializer, OrderSerializer, OrderItemSerializer
 from backend_code.token_gen import generate_token
@@ -122,7 +122,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == "destroy":
-            self.permission_classes = [IsLoggedIn]
+            self.permission_classes = [IsLoggedIn, IsProductOwner,]
         return super().get_permissions()
 
 

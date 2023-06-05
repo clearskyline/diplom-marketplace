@@ -76,10 +76,10 @@ def import_product_list_async(file, data):
                     deserializer = ProductSerializer(data=item)
                     deserializer.is_valid()
                     product_specifications = deserializer.validated_data
-                    current_item, _ = Product.objects.update_or_create(stock_number=item['stock_number'], defaults={'name': item['name'], 'model': item['model'], 'amount': item['amount'], 'price': item['price'], 'recommended_price': item['recommended_price'],'weight_class': item['weight_class']}, delivery_store=current_customer.unique_vendor_id, product_cat=current_pr_cat)
+                    current_item, _ = Product.objects.update_or_create(stock_number=item['stock_number'], defaults={**product_specifications}, delivery_store=current_customer.unique_vendor_id, product_cat=current_pr_cat)
 
+                    # current_item, _ = Product.objects.update_or_create(stock_number=item['stock_number'], defaults={'name': item['name'], 'model': item['model'], 'amount': item['amount'], 'price': item['price'], 'recommended_price': item['recommended_price'],'weight_class': item['weight_class']}, delivery_store=current_customer.unique_vendor_id, product_cat=current_pr_cat)
 
-                        # current_item, _ = Product.objects.update_or_create(stock_number=item['stock_number'], defaults={'name': item['name'], 'model': item['model'], 'amount': item['amount'], 'price': item['price'], 'recommended_price': item['recommended_price'],'weight_class': item['weight_class']})
 
                     # current_item.delivery_store.add(current_customer.id)
                     # current_item.prods.add(current_pr_cat)
@@ -94,9 +94,9 @@ def import_product_list_async(file, data):
                 body = render_to_string('import_export/import-export.html', {
                     'user': current_customer,
                     'message_body': f'Product list updated. Number of skipped items: {skipped}.'})
-                send_mail_async.delay(subject, body, from_email, to)
+                # send_mail_async.delay(subject, body, from_email, to)
                 return 'OK'
-    except KeyError as err:
+    except ValueError as err:
         subject = 'Product list import failed'
         body = render_to_string('import_export/import-export.html', {
             'user': current_customer,
