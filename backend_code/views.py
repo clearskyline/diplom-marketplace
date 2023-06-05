@@ -410,62 +410,69 @@ class ProductCatViewSet(viewsets.ModelViewSet):
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
 
-class OrderView(APIView):
+class OrderViewSet(viewsets.ModelViewSet):
+
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsLoggedIn,]
+
+    def get_object(self):
+        try:
+            return Order.objects.filter(order_customer__email_login=self.request.data.get('email_login')).first()
+        except ValueError as err:
+            return None
 
     # order create
-    def post(self, request, *args, **kwargs):
-        if {'email_login', 'express_delivery'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
+    def create(self, request, *args, **kwargs):
+        if {'express_delivery'}.issubset(request.data):
+            current_customer = Customer.objects.filter(email_login=request.data['email_login']).first()
+            basket_ = Basket.objects.filter(b_customer=current_customer)
+            if not basket_:
+                return JsonResponse({'Status': False, 'Error': 'Basket empty'})
             else:
-                basket_ = Basket.objects.filter(b_customer=current_customer)
-                if not basket_:
-                    return JsonResponse({'Status': False, 'Error': 'Basket empty'})
+                if not current_customer.address:
+                    return JsonResponse({'Status': False, 'Error': 'Please provide customer address'})
                 else:
-                    if not current_customer.address:
-                        return JsonResponse({'Status': False, 'Error': 'Please provide customer address'})
-                    else:
-                        # calculating max nominal delivery price and max weight class for all products in basket; actual delivery price and weight class is equal to the largest figure
-                        vendor_nominal_del = []
-                        basket_pr_weight = []
-                        total_price = 0
-                        for basket_item in basket_:
-                            vendor_nominal_del.append(basket_item.b_vendor.nominal_delivery_price)
-                            basket_pr_weight.append(basket_item.b_product.weight_class)
+                # calculating max nominal delivery price and max weight class for all products in basket; actual delivery price and weight class is equal to the largest figure
+                    vendor_nominal_del = []
+                    basket_pr_weight = []
+                    total_price = 0
+                    for basket_item in basket_:
+                        vendor_nominal_del.append(basket_item.b_vendor.nominal_delivery_price)
+                        basket_pr_weight.append(basket_item.b_product.weight_class)
                         # adding the price of all products in basket
-                            total_price += basket_item.b_product.price
+                        total_price += basket_item.b_product.price
 
-                        request.data._mutable = True
-                        request.data['order_customer'] = current_customer.id
-                        request.data['order_number'] = random.randint(2000,200000000)
-                        request.data['status'] = 'new'
-                        request.data['area_code'] = current_customer.area_code
-                        weight_cl_ = max(basket_pr_weight)
-                        del_price = max(vendor_nominal_del)
-                        request.data['total_price'] = total_price
-                        if request.data['express_delivery'] == "True":
-                            express_delivery = 3
-                        else:
-                            express_delivery = 1
-                        request.data['final_delivery_price'] = int(request.data['area_code']) * int(del_price) * int(weight_cl_) * int(express_delivery)
+                    request.data._mutable = True
+                    request.data['order_customer'] = current_customer.id
+                    request.data['order_number'] = random.randint(2000,200000000)
+                    request.data['status'] = 'new'
+                    request.data['area_code'] = current_customer.area_code
+                    weight_cl_ = max(basket_pr_weight)
+                    del_price = max(vendor_nominal_del)
+                    request.data['total_price'] = total_price
+                    if request.data['express_delivery'] == "True":
+                        express_delivery = 3
+                    else:
+                        express_delivery = 1
+                    request.data['final_delivery_price'] = int(request.data['area_code']) * int(del_price) * int(weight_cl_) * int(express_delivery)
 
-                        order_creation = OrderSerializer(data=request.data, partial=True)
-                        if order_creation.is_valid():
-                            current_order = order_creation.save()
-                        else:
-                            return JsonResponse(
+                    order_creation = OrderSerializer(data=request.data, partial=True)
+                    if order_creation.is_valid():
+                        current_order = order_creation.save()
+                    else:
+                        return JsonResponse(
                                 {'Status': False,
                                  'Error': order_creation.errors})
-                        for basket_item in basket_:
-                            order_items__ = OrderItemSerializer(data={'number_of_order': current_order.id, 'order_product': basket_item.b_product.id, 'order_prod_vendor': basket_item.b_vendor.id, 'order_prod_amount': basket_item.amount})
-                            if order_items__.is_valid():
-                                order_items__.save()
-                            else:
-                                return JsonResponse({'Status': False, 'Error': order_items__.errors})
-                        basket_.delete()
-                        order_confirmation_email(current_customer, current_order, request)
-                        return Response(order_creation.data)
+                    for basket_item in basket_:
+                        order_items__ = OrderItemSerializer(data={'number_of_order': current_order.id, 'order_product': basket_item.b_product.id, 'order_prod_vendor': basket_item.b_vendor.id, 'order_prod_amount': basket_item.amount})
+                        if order_items__.is_valid():
+                            order_items__.save()
+                        else:
+                            return JsonResponse({'Status': False, 'Error': order_items__.errors})
+                    basket_.delete()
+                    order_confirmation_email(current_customer, current_order, request)
+                    return Response(order_creation.data)
         return JsonResponse({'Status': False, 'Error': 'Please provide express delivery info'})
 
     # orders view
