@@ -285,13 +285,11 @@ class BasketViewSet(viewsets.ModelViewSet):
 
     # basket create and update
     def create(self, request, *args, **kwargs):
-        if {'email_login', 'stock_number', 'amount'}.issubset(request.data):
+        if {'stock_number', 'amount'}.issubset(request.data):
             try:
                 current_customer = Customer.objects.filter(email_login=self.request.data['email_login']).first()
                 basket_product = Product.objects.filter(stock_number=request.data['stock_number']).first()
                 basket_vendor = Store.objects.filter(delivery_by_store=basket_product, status=True).first()
-                print(basket_product)
-                print(basket_vendor)
                 if basket_product and basket_vendor:
                     new_purchase_item, _ = Basket.objects.update_or_create(b_product=basket_product,
                      b_customer=current_customer,
@@ -305,23 +303,17 @@ class BasketViewSet(viewsets.ModelViewSet):
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
     # basket delete
-    def delete(self, request, *args, **kwargs):
-        if {'email_login', 'stock_number'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                try:
-                    basket_product = Product.objects.filter(stock_number=request.data['stock_number']).first()
-                    basket_item_del = Basket.objects.filter(b_customer=current_customer, b_product=basket_product)
-                    if not basket_item_del:
-                        return JsonResponse({'Status': False, 'Error': 'Item not found'})
-                    else:
-                        basket_item_del.delete()
-                        return JsonResponse(
-                        {'Status': True, 'Message': 'This product has been removed from basket', 'Deleted item': request.data['stock_number']})
-                except ValueError:
-                    return JsonResponse({'Status': False, 'Error': 'Invalid data'})
+    def destroy(self, request, *args, **kwargs):
+        if {'stock_number'}.issubset(request.data):
+            try:
+                current_item = self.get_queryset().filter(b_product__stock_number=request.data['stock_number']).first()
+                if current_item:
+                    current_item.delete()
+                    return JsonResponse({'Status': True, 'Message': 'Item removed from basket'})
+                else:
+                    return JsonResponse({'Status': False, 'Error': 'Item not found'})
+            except ValueError as err:
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
 
