@@ -22,7 +22,7 @@ from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from rest_framework.decorators import action, permission_classes, api_view
-from rest_framework.generics import RetrieveDestroyAPIView
+from rest_framework.generics import RetrieveDestroyAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -324,7 +324,9 @@ class StoreCatViewSet(viewsets.ModelViewSet):
     permission_classes = [IsLoggedIn, IsStoreCatOwner,]
 
     def get_object(self):
-        return StoreCategory.objects.filter(store_cat_id=self.request.data['store_cat_id']).first()
+        obj = get_object_or_404(StoreCategory, store_cat_id=self.request.data['store_cat_id'])
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     # store category create/update
     def create(self, request, *args, **kwargs):
@@ -344,11 +346,7 @@ class StoreCatViewSet(viewsets.ModelViewSet):
 
     # store category view
     # def get(self, request, *args, **kwargs):
-    #     if {'email_login', 'store_cat_id'}.issubset(request.data):
-    #         current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-    #         if json_auth_err:
-    #             return json_auth_err
-    #         else:
+    #     if {'email_login', 'store_cat_id'}.issubset(request.data):    #
     #             try:
     #                 store_cat = StoreCategory.objects.filter(store_cat_id=request.data['store_cat_id']).first()
     #                 if store_cat:
