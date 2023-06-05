@@ -72,10 +72,11 @@ def import_product_list_async(file, data):
                     # else:
                     #     current_pr_cat = ProductCategory.objects.filter(prod_cat_id=item['category']).first()
 
+                    current_pr_cat = ProductCategory.objects.filter(prod_cat_id=item['category']).first()
                     deserializer = ProductSerializer(data=item)
                     deserializer.is_valid()
                     product_specifications = deserializer.validated_data
-                    current_item, _ = Product.objects.update_or_create(stock_number=item['stock_number'], defaults={'name': item['name'], 'model': item['model'], 'amount': item['amount'], 'price': item['price'], 'recommended_price': item['recommended_price'],'weight_class': item['weight_class']}, delivery_store=current_customer.id)
+                    current_item, _ = Product.objects.update_or_create(stock_number=item['stock_number'], defaults={'name': item['name'], 'model': item['model'], 'amount': item['amount'], 'price': item['price'], 'recommended_price': item['recommended_price'],'weight_class': item['weight_class']}, delivery_store=current_customer.unique_vendor_id, product_cat=current_pr_cat)
 
 
                         # current_item, _ = Product.objects.update_or_create(stock_number=item['stock_number'], defaults={'name': item['name'], 'model': item['model'], 'amount': item['amount'], 'price': item['price'], 'recommended_price': item['recommended_price'],'weight_class': item['weight_class']})
@@ -95,7 +96,7 @@ def import_product_list_async(file, data):
                     'message_body': f'Product list updated. Number of skipped items: {skipped}.'})
                 send_mail_async.delay(subject, body, from_email, to)
                 return 'OK'
-    except ValueError as err:
+    except KeyError as err:
         subject = 'Product list import failed'
         body = render_to_string('import_export/import-export.html', {
             'user': current_customer,
