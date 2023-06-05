@@ -32,7 +32,7 @@ from rest_framework.viewsets import ViewSet
 
 from backend_code.models import Product, ProductCategory, Store, Customer, Basket, ProductParameters, StoreCategory, \
     Order
-from backend_code.permissions import IsLoggedIn, IsProductOwner
+from backend_code.permissions import IsLoggedIn, IsProductOwner, IsStoreCatOwner
 from backend_code.serializers import ProductSerializer, CustomerSerializer, StoreSerializer, BasketSerializer, \
     StoreCatSerializer, ProdCatSerializer, OrderSerializer, OrderItemSerializer
 from backend_code.token_gen import generate_token
@@ -317,65 +317,65 @@ class BasketViewSet(viewsets.ModelViewSet):
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
 
-class StoreCatView(APIView):
+class StoreCatViewSet(viewsets.ModelViewSet):
+
+    queryset = StoreCategory.objects.all()
+    serializer_class = StoreCatSerializer
+    permission_classes = [IsLoggedIn, IsStoreCatOwner,]
+
+    def get_object(self):
+        return StoreCategory.objects.filter(store_cat_id=self.request.data['store_cat_id']).first()
 
     # store category create/update
-    def post(self, request, *args, **kwargs):
-        if {'email_login', 'name'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                try:
-                    if request.data.get('store_cat_id'):
-                        store_cat_id = request.data.get('store_cat_id')
-                    else:
-                        store_cat_id = random.randint(100, 2000000)
-                    store_cat, _ = StoreCategory.objects.update_or_create(store_cat_id=store_cat_id, defaults={'name': request.data['name']})
-                    st_cat__json = StoreCatSerializer(store_cat)
-                    return Response(st_cat__json.data)
-                except ValueError as err:
-                    return JsonResponse({'Status': False, 'Error': 'Invalid data'})
+    def create(self, request, *args, **kwargs):
+        if {'name'}.issubset(request.data):
+            try:
+                if request.data.get('store_cat_id'):
+                    store_cat_id = request.data.get('store_cat_id')
+                else:
+                    store_cat_id = random.randint(100, 2000000)
+                current_customer = Customer.objects.filter(email_login=request.data['email_login']).first()
+                store_cat, _ = StoreCategory.objects.update_or_create(store_cat_id=store_cat_id, store_cat_creator=current_customer, defaults={'name': request.data['name']})
+                store_cat__ser = StoreCatSerializer(store_cat)
+                return Response(store_cat__ser.data)
+            except ValueError as err:
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
     # store category view
-    def get(self, request, *args, **kwargs):
-        if {'email_login', 'store_cat_id'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                try:
-                    store_cat = StoreCategory.objects.filter(store_cat_id=request.data['store_cat_id']).first()
-                    if store_cat:
-                        st_cat__json = StoreCatSerializer(store_cat)
-                        return Response(st_cat__json.data)
-                    else:
-                        return JsonResponse({'Status': False, 'Error': 'Store category not found'})
-                except ValueError as err:
-                    return JsonResponse({'Status': False, 'Error': 'Invalid data'})
-        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+    # def get(self, request, *args, **kwargs):
+    #     if {'email_login', 'store_cat_id'}.issubset(request.data):
+    #         current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
+    #         if json_auth_err:
+    #             return json_auth_err
+    #         else:
+    #             try:
+    #                 store_cat = StoreCategory.objects.filter(store_cat_id=request.data['store_cat_id']).first()
+    #                 if store_cat:
+    #                     st_cat__json = StoreCatSerializer(store_cat)
+    #                     return Response(st_cat__json.data)
+    #                 else:
+    #                     return JsonResponse({'Status': False, 'Error': 'Store category not found'})
+    #             except ValueError as err:
+    #                 return JsonResponse({'Status': False, 'Error': 'Invalid data'})
+    #     return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
     # store category delete
-    def delete(self, request, *args, **kwargs):
-        if {'email_login', 'store_cat_id'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                try:
-                    store_cat = StoreCategory.objects.filter(store_cat_id=request.data['store_cat_id']).first()
-                    if store_cat:
-                        store_check = Store.objects.filter(cats=store_cat).first()
-                        if not store_check:
-                            store_cat.delete()
-                            return JsonResponse({'Status': True, 'Message': 'Store category deleted'})
-                        else:
-                            return JsonResponse({'Status': False, 'Message': 'Store category not empty'})
+    def destroy(self, request, *args, **kwargs):
+        if {'store_cat_id'}.issubset(request.data):
+            try:
+                store_cat = self.get_object()
+                if store_cat:
+                    store_check = Store.objects.filter(cats=store_cat).first()
+                    if not store_check:
+                        store_cat.delete()
+                        return JsonResponse({'Status': True, 'Message': 'Store category deleted'})
                     else:
-                        return JsonResponse({'Status': False, 'Error': 'Store category not found'})
-                except ValueError as err:
-                    return JsonResponse({'Status': False, 'Error': 'Invalid category ID'})
+                        return JsonResponse({'Status': False, 'Message': 'Store category not empty'})
+                else:
+                    return JsonResponse({'Status': False, 'Error': 'Store category not found'})
+            except KeyError as err:
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
 

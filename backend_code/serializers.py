@@ -49,10 +49,11 @@ class BasketSerializer(serializers.ModelSerializer):
 
 class StoreCatSerializer(serializers.ModelSerializer):
     stores = StoreSerializer(read_only=True, many=True)
+    store_cat_creator = CustomerSerializer(read_only=True)
 
     class Meta:
         model = StoreCategory
-        fields = ['id', 'store_cat_id', 'name', 'stores']
+        fields = ['id', 'store_cat_id', 'store_cat_creator', 'name', 'stores']
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

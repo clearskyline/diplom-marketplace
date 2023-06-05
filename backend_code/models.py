@@ -31,7 +31,8 @@ class Store(models.Model):
 
 
 class StoreCategory(models.Model):
-    store_cat_id = models.PositiveIntegerField()
+    store_cat_id = models.PositiveIntegerField(unique=True)
+    store_cat_creator = models.ForeignKey('Customer', related_name='st_c_creator', on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     stores = models.ManyToManyField(Store, related_name='cats', blank=True)
 
@@ -53,7 +54,7 @@ class ProductParameters(models.Model):
 
 
 class ProductCategory(models.Model):
-    prod_cat_id = models.PositiveIntegerField()
+    prod_cat_id = models.PositiveIntegerField(unique=True)
     name = models.CharField(max_length=50)
 
     class Meta:
