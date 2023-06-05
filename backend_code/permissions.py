@@ -27,3 +27,8 @@ class IsStoreCatOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.store_cat_creator.email_login == request.data['email_login']
 
+
+class IsOrderOwner(BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        return obj.order_customer.email_login == request.data['email_login']

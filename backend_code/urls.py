@@ -7,7 +7,6 @@ from backend_code.views import VendorSupply, StoreViewSet, BasketViewSet, StoreC
 
 router = DefaultRouter()
 router.register(r'goods', ProductViewSet, basename="product-set")
-router.register(r'order', OrderViewSet, basename="order-set")
 
 app_name = 'backend_code'
 urlpatterns = [
@@ -21,7 +20,7 @@ urlpatterns = [
     path('store-cat/', StoreCatViewSet.as_view({'post': 'create', 'get': 'retrieve', 'delete': 'destroy'}), name='store-cat-view'),
     path('prod-cat/', ProductCatViewSet.as_view({'post': 'create', 'get': 'retrieve', 'delete': 'destroy'}), name='product-cat-view'),
     path('login/', LoginView.as_view(), name='login-view'),
-    # path('order/', OrderViewSet.as_view({'post': 'create', 'get': 'retrieve', 'delete': 'destroy'}), name='order-view'),
+    path('order/', OrderViewSet.as_view({'post': 'create', 'get': 'order_list', 'delete': 'destroy'}), name='order-view'),
     path('order-detail/', OrderDetailView.as_view(), name='order-detail-view'),
     path('email-activation/<uidb64>/<token>/', activate_user, name='activate-by-mail'),
     path('product-export/', ProductExportView.as_view(), name='export_product_list'),

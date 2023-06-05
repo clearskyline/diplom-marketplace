@@ -33,7 +33,7 @@ from rest_framework.viewsets import ViewSet
 
 from backend_code.models import Product, ProductCategory, Store, Customer, Basket, ProductParameters, StoreCategory, \
     Order
-from backend_code.permissions import IsLoggedIn, IsProductOwner, IsStoreCatOwner
+from backend_code.permissions import IsLoggedIn, IsProductOwner, IsStoreCatOwner, IsOrderOwner
 from backend_code.serializers import ProductSerializer, CustomerSerializer, StoreSerializer, BasketSerializer, \
     StoreCatSerializer, ProdCatSerializer, OrderSerializer, OrderItemSerializer
 from backend_code.token_gen import generate_token
@@ -414,13 +414,10 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    permission_classes = [IsLoggedIn,]
+    permission_classes = [IsLoggedIn, IsOrderOwner]
 
-    def get_object(self):
-        try:
-            return Order.objects.filter(order_customer__email_login=self.request.data.get('email_login')).first()
-        except ValueError as err:
-            return None
+    def get_queryset(self):
+        return Order.objects.filter(order_customer__email_login=self.request.data['email_login']).all()
 
     # order create
     def create(self, request, *args, **kwargs):
@@ -476,16 +473,10 @@ class OrderViewSet(viewsets.ModelViewSet):
         return JsonResponse({'Status': False, 'Error': 'Please provide express delivery info'})
 
     # orders view
-    def get(self, request, *args, **kwargs):
-        if {'email_login'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                order_set = Order.objects.filter(order_customer=current_customer).all()
-                order_set_ser = OrderSerializer(order_set, many=True)
-                return Response(order_set_ser.data)
-        return JsonResponse({'Status': False, 'Error': 'Please provide email'})
+    def order_list(self, request, *args, **kwargs):
+        order_set = self.get_queryset()
+        order_set_ser = OrderSerializer(order_set, many=True)
+        return Response(order_set_ser.data)
 
     # order delete
     def delete(self, request, *args, **kwargs):
