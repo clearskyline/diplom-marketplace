@@ -64,44 +64,34 @@ def import_product_list_async(file, data):
                     prod_cat, _ = ProductCategory.objects.update_or_create(prod_cat_id=cat['prod_cat_id'], defaults={'name': cat['name']})
                     prod_cat.save()
                 for item in data_loaded['goods']:
-
-
-                    # check_article_exists = Product.objects.filter(stock_number=item['stock_number']).exclude(delivery_store=current_customer.unique_vendor_id)
-                    # if check_article_exists:
-                    #     skipped += 1
-                    # else:
-                    #     current_pr_cat = ProductCategory.objects.filter(prod_cat_id=item['category']).first()
-
-                    current_pr_cat = ProductCategory.objects.filter(prod_cat_id=item['category']).first()
-                    deserializer = ProductSerializer(data=item)
-                    deserializer.is_valid()
-                    product_specifications = deserializer.validated_data
-                    current_item, _ = Product.objects.update_or_create(stock_number=item['stock_number'], defaults={**product_specifications}, delivery_store=current_customer.unique_vendor_id, product_cat=current_pr_cat)
-
-                    # current_item, _ = Product.objects.update_or_create(stock_number=item['stock_number'], defaults={'name': item['name'], 'model': item['model'], 'amount': item['amount'], 'price': item['price'], 'recommended_price': item['recommended_price'],'weight_class': item['weight_class']}, delivery_store=current_customer.unique_vendor_id, product_cat=current_pr_cat)
-
-
-                    # current_item.delivery_store.add(current_customer.id)
-                    # current_item.prods.add(current_pr_cat)
-                    current_item.save()
-                    prod_params, __ = ProductParameters.objects.update_or_create(pr_id=current_item, defaults={
-                            'screen_size': item['parameters']['Диагональ (дюйм)'],
-                            'dimension': item['parameters']['Разрешение (пикс)'],
-                            'RAM': item['parameters']['Встроенная память (Гб)'],
-                            'color': item['parameters']['Цвет']})
-                    prod_params.save()
+                    check_article_exists = Product.objects.filter(stock_number=item['stock_number']).first()
+                    if check_article_exists:
+                        skipped += 1
+                    else:
+                        current_pr_cat = ProductCategory.objects.filter(prod_cat_id=item['category']).first()
+                        deserializer = ProductSerializer(data=item)
+                        deserializer.is_valid()
+                        product_specifications = deserializer.validated_data
+                        current_item, _ = Product.objects.update_or_create(stock_number=item['stock_number'], defaults={**product_specifications}, delivery_store=current_customer.unique_vendor_id, product_cat=current_pr_cat)
+                        current_item.save()
+                        prod_params, __ = ProductParameters.objects.update_or_create(pr_id=current_item, defaults={
+                                'screen_size': item['parameters']['Диагональ (дюйм)'],
+                                'dimension': item['parameters']['Разрешение (пикс)'],
+                                'RAM': item['parameters']['Встроенная память (Гб)'],
+                                'color': item['parameters']['Цвет']})
+                        prod_params.save()
                 subject = 'Product list imported successfully'
                 body = render_to_string('import_export/import-export.html', {
-                    'user': current_customer,
-                    'message_body': f'Product list updated. Number of skipped items: {skipped}.'})
-                # send_mail_async.delay(subject, body, from_email, to)
-                return 'OK'
+                        'user': current_customer,
+                        'message_body': f'Product list updated. Number of skipped items: {skipped}.'})
+                send_mail_async.delay(subject, body, from_email, to)
+                return f'OK - {skipped}'
     except ValueError as err:
         subject = 'Product list import failed'
         body = render_to_string('import_export/import-export.html', {
             'user': current_customer,
             'message_body': 'Product list import failed. Invalid data.'})
-        # send_mail_async.delay(subject, body, from_email, to)
+        send_mail_async.delay(subject, body, from_email, to)
         return 'Invalid data'
 
 
