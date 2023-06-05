@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from backend_code.views import VendorSupply, StoreViewSet, BasketViewSet, StoreCatViewSet, \
-    ProductCatView, LoginView, OrderView, OrderDetailView, activate_user, ProductExportView, \
+    ProductCatViewSet, LoginView, OrderView, OrderDetailView, activate_user, ProductExportView, \
     ProductViewSet, CustomerViewSet, CustomerSignUp
 
 router = DefaultRouter()
@@ -18,7 +18,7 @@ urlpatterns = [
     path('store/', StoreViewSet.as_view({'post': 'create', 'get': 'retrieve', 'delete': 'destroy', 'patch': 'update'}), name='store-set'),
     path('basket/', BasketViewSet.as_view({'post': 'create', 'get': 'list', 'delete': 'destroy'}), name='basket-viewset'),
     path('store-cat/', StoreCatViewSet.as_view({'post': 'create', 'get': 'retrieve', 'delete': 'destroy'}), name='store-cat-view'),
-    path('prod-cat/', ProductCatView.as_view(), name='product-cat-view'),
+    path('prod-cat/', ProductCatViewSet.as_view({'post': 'create', 'get': 'retrieve', 'delete': 'destroy'}), name='product-cat-view'),
     path('login/', LoginView.as_view(), name='login-view'),
     path('order/', OrderView.as_view(), name='order-view'),
     path('order-detail/', OrderDetailView.as_view(), name='order-detail-view'),

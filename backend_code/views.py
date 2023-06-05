@@ -345,20 +345,6 @@ class StoreCatViewSet(viewsets.ModelViewSet):
                 return JsonResponse({'Status': False, 'Error': 'Category cannot be updated.'})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
-    # store category view
-    # def get(self, request, *args, **kwargs):
-    #     if {'email_login', 'store_cat_id'}.issubset(request.data):    #
-    #             try:
-    #                 store_cat = StoreCategory.objects.filter(store_cat_id=request.data['store_cat_id']).first()
-    #                 if store_cat:
-    #                     st_cat__json = StoreCatSerializer(store_cat)
-    #                     return Response(st_cat__json.data)
-    #                 else:
-    #                     return JsonResponse({'Status': False, 'Error': 'Store category not found'})
-    #             except ValueError as err:
-    #                 return JsonResponse({'Status': False, 'Error': 'Invalid data'})
-    #     return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
-
     # store category delete
     def destroy(self, request, *args, **kwargs):
         if {'store_cat_id'}.issubset(request.data):
@@ -378,25 +364,40 @@ class StoreCatViewSet(viewsets.ModelViewSet):
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
 
-class ProductCatView(APIView):
+class ProductCatViewSet(viewsets.ModelViewSet):
+
+    queryset = ProductCategory.objects.all()
+    serializer_class = ProdCatSerializer
+    permission_classes = [IsLoggedIn,]
+
+    def get_object(self):
+        try:
+            return ProductCategory.objects.filter(prod_cat_id=self.request.data.get('prod_cat_id')).first()
+        except ValueError as err:
+            return None
+
+    def get_permissions(self):
+        if self.action == "retrieve":
+            self.permission_classes = [AllowAny,]
+        return super().get_permissions()
 
     # product category view
-    def get(self, request, *args, **kwargs):
-        if {'email_login', 'prod_cat_id'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                try:
-                    prod_cat__ = ProductCategory.objects.filter(prod_cat_id=request.data['prod_cat_id']).first()
-                    if prod_cat__:
-                        prod_cat__json = ProdCatSerializer(prod_cat__)
-                        return Response(prod_cat__json.data)
-                    else:
-                        return JsonResponse({'Status': False, 'Error': 'Product category not found'})
-                except ValueError as err:
-                    return JsonResponse({'Status': False, 'Error': 'Invalid category ID'})
-        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+    # def get(self, request, *args, **kwargs):
+    #     if {'email_login', 'prod_cat_id'}.issubset(request.data):
+    #         current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
+    #         if json_auth_err:
+    #             return json_auth_err
+    #         else:
+    #             try:
+    #                 prod_cat__ = ProductCategory.objects.filter(prod_cat_id=request.data['prod_cat_id']).first()
+    #                 if prod_cat__:
+    #                     prod_cat__json = ProdCatSerializer(prod_cat__)
+    #                     return Response(prod_cat__json.data)
+    #                 else:
+    #                     return JsonResponse({'Status': False, 'Error': 'Product category not found'})
+    #             except ValueError as err:
+    #                 return JsonResponse({'Status': False, 'Error': 'Invalid category ID'})
+    #     return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
     # product category create/update
     def post(self, request, *args, **kwargs):
