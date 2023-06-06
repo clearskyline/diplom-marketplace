@@ -7,7 +7,6 @@ from django.conf import settings
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.sites.shortcuts import get_current_site
-# from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMessage
 from django.core.serializers import get_serializer
 from django.core.serializers.json import DjangoJSONEncoder
@@ -153,8 +152,8 @@ class CustomerSignUp(APIView):
             request.data._mutable = True
             request.data['password'] = make_password(request.data['password'])
             if request.data['registered_vendor'] == 'True':
-                request.data['seller_vendor_id'] = 56120
-                # request.data['seller_vendor_id'] = random.randint(200,20000)
+                # request.data['seller_vendor_id'] = 56120
+                request.data['seller_vendor_id'] = random.randint(200,20000)
             else:
                 request.data['seller_vendor_id'] = None
             user_serializer = CustomerSerializer(data=request.data)
@@ -191,8 +190,8 @@ class CustomerViewSet(viewsets.ModelViewSet):
                 return JsonResponse({'Status': False, 'Errors': {'password': pass_errors}})
         current_customer = self.get_object()
         if request.data['registered_vendor'] == 'True' and not current_customer.seller_vendor_id:
-            request.data['seller_vendor_id'] = 56120
-            # request.data['seller_vendor_id'] = random.randint(200,20000)
+            # request.data['seller_vendor_id'] = 56120
+            request.data['seller_vendor_id'] = random.randint(200,20000)
         serializer = CustomerSerializer(current_customer, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -464,12 +463,6 @@ class OrderViewSet(viewsets.ModelViewSet):
                     for basket_item in basket_:
                         current_product = Product.objects.filter(id=basket_item.b_product.id).first()
                         order_item = OrderItems.objects.create(number_of_order=current_order, order_product=current_product, order_prod_vendor=basket_item.b_vendor, order_prod_amount=basket_item.amount)
-
-                        # order_items__ = OrderItemSerializer(data={'number_of_order': current_order.id, 'order_product': order_product.id, 'order_prod_vendor': basket_item.b_vendor.id, 'order_prod_amount': basket_item.amount})
-                        # if order_items__.is_valid():
-                        #     order_items__.save()
-                        # else:
-                        #     return JsonResponse({'Status': False, 'Error': order_items__.errors})
                     basket_.delete()
                     order_confirmation_email(current_customer, current_order, request)
                     return Response(order_creation.data)
@@ -480,11 +473,6 @@ class OrderViewSet(viewsets.ModelViewSet):
         order_set = self.get_queryset()
         order_set_ser = OrderSerializer(order_set, many=True)
         return Response(order_set_ser.data)
-
-    # current order view (retrieve)
-    # def order_retrieve(self, request, *args, **kwargs):
-    #     order_retrieve_ser = OrderItemSerializer()
-    #     return Response(order_retrieve_ser.data)
 
     # order delete
     def destroy(self, request, *args, **kwargs):
@@ -511,37 +499,13 @@ class OrderDetailViewSet(viewsets.ModelViewSet):
     lookup_field = 'order_slug'
     permission_classes = [IsLoggedIn, IsOrderOwner]
 
-    # def retrieve(self, request, *args, **kwargs):
-    #     res = OrderItemSerializer(data=request.data)
-    #     res.is_valid()
-    #     return Response(res.data)
 
-    # view specific order
-    # def get(self, request, *args, **kwargs):
-    #     if {'email_login', 'order_number'}.issubset(request.data):
-    #         try:
-    #             current_customer = Customer.objects.filter(email_login=request.data['email_login']).first()
-    #             order_detail = Order.objects.filter(order_customer=current_customer, order_number=request.data['order_number']).first()
-    #             if not order_detail:
-    #                 return JsonResponse({'Status': False, 'Error': 'Order not found'})
-    #             else:
-    #                 order_detail_ser = OrderItemSerializer(order_detail)
-    #                 return Response(order_detail_ser.data)
-    #         except ValueError as err:
-    #             return JsonResponse({'Status': False, 'Error': 'Invalid data'})
-    #     return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+class ProductExportViewSet(viewsets.ModelViewSet):
 
-
-class ProductExportView(APIView):
+    permission_classes = [IsLoggedIn,]
 
     # export all products by specific vendor
-    def get(self, request, *args, **kwargs):
-        if {'email_login'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                file = "export_file.yaml"
-                export_product_list_async.delay(file, request.data)
-                return JsonResponse({'Status': True, 'Message': 'Details will be sent to your email'})
-        return JsonResponse({'Status': False, 'Error': 'Please provide your email address'})
+    def export_product_list(self, request, *args, **kwargs):
+        file = "export_file.yaml"
+        export_product_list_async.delay(file, request.data)
+        return JsonResponse({'Status': True, 'Message': 'Details will be sent to your email'})
