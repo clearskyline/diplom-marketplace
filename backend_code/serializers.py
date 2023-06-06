@@ -57,6 +57,7 @@ class StoreCatSerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    order_product = ProductSerializer(read_only=True)
 
     class Meta:
         model = OrderItems
@@ -64,8 +65,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    order_items_number = OrderItemSerializer(read_only=True, many=True)
+    # order_items_number = OrderItemSerializer(read_only=True, many=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'order_number', 'order_customer', 'area_code', 'total_price', 'final_delivery_price', 'express_delivery', 'status', 'order_items_number']
+        fields = ['id', 'order_number', 'order_customer', 'area_code', 'total_price', 'final_delivery_price', 'express_delivery', 'status']

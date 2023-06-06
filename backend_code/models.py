@@ -143,6 +143,17 @@ class Order(models.Model):
 
 class OrderItems(models.Model):
     number_of_order = models.ForeignKey(Order, related_name='order_items_number', on_delete=models.CASCADE)
-    order_product = models.CharField(max_length=100)
+    order_slug = models.SlugField(max_length=100, db_index=True, verbose_name='order_URL')
+    order_product = models.ForeignKey(Product, related_name='product_by_order', on_delete=models.CASCADE)
     order_prod_vendor = models.CharField(max_length=100)
     order_prod_amount = models.PositiveIntegerField()
+
+
+    class Meta:
+        verbose_name = 'Order items'
+        verbose_name_plural = 'Orders items'
+        ordering = ('-number_of_order',)
+
+    def save(self, *args, **kwargs):
+        self.order_slug = slugify(self.number_of_order.order_number)
+        super(OrderItems, self).save(*args, **kwargs)

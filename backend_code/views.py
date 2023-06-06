@@ -32,7 +32,7 @@ import yaml
 from rest_framework.viewsets import ViewSet
 
 from backend_code.models import Product, ProductCategory, Store, Customer, Basket, ProductParameters, StoreCategory, \
-    Order
+    Order, OrderItems
 from backend_code.permissions import IsLoggedIn, IsProductOwner, IsStoreCatOwner, IsOrderOwner
 from backend_code.serializers import ProductSerializer, CustomerSerializer, StoreSerializer, BasketSerializer, \
     StoreCatSerializer, ProdCatSerializer, OrderSerializer, OrderItemSerializer
@@ -462,11 +462,14 @@ class OrderViewSet(viewsets.ModelViewSet):
                                 {'Status': False,
                                  'Error': order_creation.errors})
                     for basket_item in basket_:
-                        order_items__ = OrderItemSerializer(data={'number_of_order': current_order.id, 'order_product': basket_item.b_product.id, 'order_prod_vendor': basket_item.b_vendor.id, 'order_prod_amount': basket_item.amount})
-                        if order_items__.is_valid():
-                            order_items__.save()
-                        else:
-                            return JsonResponse({'Status': False, 'Error': order_items__.errors})
+                        current_product = Product.objects.filter(id=basket_item.b_product.id).first()
+                        order_item = OrderItems.objects.create(number_of_order=current_order, order_product=current_product, order_prod_vendor=basket_item.b_vendor, order_prod_amount=basket_item.amount)
+
+                        # order_items__ = OrderItemSerializer(data={'number_of_order': current_order.id, 'order_product': order_product.id, 'order_prod_vendor': basket_item.b_vendor.id, 'order_prod_amount': basket_item.amount})
+                        # if order_items__.is_valid():
+                        #     order_items__.save()
+                        # else:
+                        #     return JsonResponse({'Status': False, 'Error': order_items__.errors})
                     basket_.delete()
                     order_confirmation_email(current_customer, current_order, request)
                     return Response(order_creation.data)
@@ -498,22 +501,23 @@ class OrderViewSet(viewsets.ModelViewSet):
 
 class OrderDetailView(APIView):
 
+    # queryset = OrderItems.objects.all()
+    # serializer_class = Or
+    # permission_classes =
+
     # view specific order
     def get(self, request, *args, **kwargs):
         if {'email_login', 'order_number'}.issubset(request.data):
-            current_customer, json_auth_err = custom_authenticate(request.data['email_login'])
-            if json_auth_err:
-                return json_auth_err
-            else:
-                try:
-                    order_detail = Order.objects.filter(order_customer=current_customer, order_number=request.data['order_number']).first()
-                    if not order_detail:
-                        return JsonResponse({'Status': False, 'Error': 'Order not found'})
-                    else:
-                        order_detail_ser = OrderSerializer(order_detail)
-                        return Response(order_detail_ser.data)
-                except ValueError as err:
-                    return JsonResponse({'Status': False, 'Error': 'Invalid order number'})
+            try:
+                current_customer = Customer.objects.filter(email_login=request.data['email_login']).first()
+                order_detail = Order.objects.filter(order_customer=current_customer, order_number=request.data['order_number']).first()
+                if not order_detail:
+                    return JsonResponse({'Status': False, 'Error': 'Order not found'})
+                else:
+                    order_detail_ser = OrderItemSerializer(order_detail)
+                    return Response(order_detail_ser.data)
+            except ValueError as err:
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
 
