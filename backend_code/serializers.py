@@ -57,6 +57,7 @@ class StoreCatSerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    number_of_order = serializers.StringRelatedField(source='order.order_number')
     order_product = ProductSerializer(read_only=True)
 
     class Meta:
@@ -70,3 +71,11 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'order_number', 'order_customer', 'area_code', 'total_price', 'final_delivery_price', 'express_delivery', 'status']
+
+
+class OrderDetailSerializer(serializers.ModelSerializer):
+    order_items_number = OrderItemSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'order_number', 'order_items_number', 'order_customer', 'area_code', 'total_price', 'final_delivery_price', 'express_delivery', 'status']

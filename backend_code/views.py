@@ -35,7 +35,7 @@ from backend_code.models import Product, ProductCategory, Store, Customer, Baske
     Order, OrderItems
 from backend_code.permissions import IsLoggedIn, IsProductOwner, IsStoreCatOwner, IsOrderOwner
 from backend_code.serializers import ProductSerializer, CustomerSerializer, StoreSerializer, BasketSerializer, \
-    StoreCatSerializer, ProdCatSerializer, OrderSerializer, OrderItemSerializer
+    StoreCatSerializer, ProdCatSerializer, OrderSerializer, OrderDetailSerializer
 from backend_code.token_gen import generate_token
 
 from backend_code.tasks import send_mail_async, import_product_list_async, export_product_list_async
@@ -481,6 +481,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         order_set_ser = OrderSerializer(order_set, many=True)
         return Response(order_set_ser.data)
 
+    # current order view (retrieve)
+    # def order_retrieve(self, request, *args, **kwargs):
+    #     order_retrieve_ser = OrderItemSerializer()
+    #     return Response(order_retrieve_ser.data)
+
     # order delete
     def destroy(self, request, *args, **kwargs):
         if {'order_number'}.issubset(request.data):
@@ -499,26 +504,32 @@ class OrderViewSet(viewsets.ModelViewSet):
         return JsonResponse({'Status': False, 'Error': 'Please provide order number'})
 
 
-class OrderDetailView(APIView):
+class OrderDetailViewSet(viewsets.ModelViewSet):
 
-    # queryset = OrderItems.objects.all()
-    # serializer_class = Or
-    # permission_classes =
+    queryset = Order.objects.all()
+    serializer_class = OrderDetailSerializer
+    lookup_field = 'order_slug'
+    permission_classes = [IsLoggedIn, IsOrderOwner]
+
+    # def retrieve(self, request, *args, **kwargs):
+    #     res = OrderItemSerializer(data=request.data)
+    #     res.is_valid()
+    #     return Response(res.data)
 
     # view specific order
-    def get(self, request, *args, **kwargs):
-        if {'email_login', 'order_number'}.issubset(request.data):
-            try:
-                current_customer = Customer.objects.filter(email_login=request.data['email_login']).first()
-                order_detail = Order.objects.filter(order_customer=current_customer, order_number=request.data['order_number']).first()
-                if not order_detail:
-                    return JsonResponse({'Status': False, 'Error': 'Order not found'})
-                else:
-                    order_detail_ser = OrderItemSerializer(order_detail)
-                    return Response(order_detail_ser.data)
-            except ValueError as err:
-                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
-        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+    # def get(self, request, *args, **kwargs):
+    #     if {'email_login', 'order_number'}.issubset(request.data):
+    #         try:
+    #             current_customer = Customer.objects.filter(email_login=request.data['email_login']).first()
+    #             order_detail = Order.objects.filter(order_customer=current_customer, order_number=request.data['order_number']).first()
+    #             if not order_detail:
+    #                 return JsonResponse({'Status': False, 'Error': 'Order not found'})
+    #             else:
+    #                 order_detail_ser = OrderItemSerializer(order_detail)
+    #                 return Response(order_detail_ser.data)
+    #         except ValueError as err:
+    #             return JsonResponse({'Status': False, 'Error': 'Invalid data'})
+    #     return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
 
 class ProductExportView(APIView):

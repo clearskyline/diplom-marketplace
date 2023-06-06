@@ -130,6 +130,7 @@ class Basket(models.Model):
 
 class Order(models.Model):
     order_number = models.PositiveIntegerField(unique=True)
+    order_slug = models.SlugField(unique=True, max_length=100, db_index=True, verbose_name='order_URL')
     order_customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='order_by_customer')
     area_code = models.PositiveIntegerField()
     final_delivery_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -137,13 +138,16 @@ class Order(models.Model):
     total_price = models.PositiveIntegerField()
     status = models.CharField(choices=STATUS_CHOICES, max_length=30)
 
+    def save(self, *args, **kwargs):
+        self.order_slug = slugify(self.order_number)
+        super(Order, self).save(*args, **kwargs)
+
     def __str__(self):
         return self.order_number
 
 
 class OrderItems(models.Model):
     number_of_order = models.ForeignKey(Order, related_name='order_items_number', on_delete=models.CASCADE)
-    order_slug = models.SlugField(max_length=100, db_index=True, verbose_name='order_URL')
     order_product = models.ForeignKey(Product, related_name='product_by_order', on_delete=models.CASCADE)
     order_prod_vendor = models.CharField(max_length=100)
     order_prod_amount = models.PositiveIntegerField()
@@ -154,6 +158,3 @@ class OrderItems(models.Model):
         verbose_name_plural = 'Orders items'
         ordering = ('-number_of_order',)
 
-    def save(self, *args, **kwargs):
-        self.order_slug = slugify(self.number_of_order.order_number)
-        super(OrderItems, self).save(*args, **kwargs)
