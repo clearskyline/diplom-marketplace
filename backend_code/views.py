@@ -17,7 +17,7 @@ from django.template.loader import render_to_string
 from django.utils.datastructures import MultiValueDictKeyError
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
@@ -148,7 +148,7 @@ class CustomerSignUp(APIView):
                 pass_errors = []
                 for err in password_errors:
                     pass_errors.append(err)
-                return JsonResponse({'Status': False, 'Errors': {'password': pass_errors}})
+                return JsonResponse({'Status': False, 'Errors': {'password': pass_errors}}, status=401)
             request.data._mutable = True
             request.data['password'] = make_password(request.data['password'])
             if request.data['registered_vendor'] == 'True':
@@ -160,7 +160,7 @@ class CustomerSignUp(APIView):
             if user_serializer.is_valid():
                 current_user = user_serializer.save()
                 send_activation_email(current_user, request)
-                return Response(user_serializer.data)
+                return Response(user_serializer.data, status=201)
             else:
                 return JsonResponse({'Status': False, 'Error': user_serializer.errors})
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})

@@ -150,6 +150,7 @@ AUTH_USER_MODEL = "backend_code.Customer"
 
 #  EMAIL CONFIG
 EMAIL_FROM_USER = os.environ.get('EMAIL_FROM_USER')
+EMAIL_TO_USER = os.environ.get('EMAIL_TO_USER')
 EMAIL_HOST = os.environ.get('EMAIL_HOST')
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')

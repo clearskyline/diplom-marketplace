@@ -11,3 +11,5 @@ gunicorn
 celery
 redis
 django-filter
+pytest-django
+pytest
