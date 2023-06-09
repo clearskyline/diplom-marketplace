@@ -5,6 +5,7 @@ from rest_framework.test import APIClient
 
 from backend_code.models import Customer, Product, Store, StoreCategory, ProductCategory
 from backend_code.permissions import IsLoggedIn
+from backend_code.views import LoginView
 from marketplace import settings
 
 
@@ -65,20 +66,20 @@ class TestUser:
 
     # user login
     @pytest.mark.parametrize('email_verified_check', [False, True])
+    @pytest.mark.parametrize('password_check', ['incorrect_password', 'valid0_password'])
     @pytest.mark.django_db(transaction=True)
-    def test_login(self, client, sample_user, email_verified_check):
+    def test_login(self, client, sample_user, email_verified_check, password_check):
         sample_user.email_verified = email_verified_check
         sample_user.save()
-        response_login = client.post('/api/v1/login/', data={'email_login': sample_user.email_login, 'password': 'valid0_password'})
+        response_login = client.post('/api/v1/login/', data={'email_login': sample_user.email_login, 'password': password_check})
         assert response_login.status_code == 200
 
     # user view
     # @pytest.mark.parametrize('email_login_check', ['error', settings.EMAIL_TO_USER])
     @pytest.mark.django_db(transaction=True)
     def test_user_view(self, client, login_user):
-        # token = Token.objects.create(user=sample_user)
-        # sample_user.permissions.add('IsLoggedIn')
         response_user_view = client.get('/api/v1/customers/', data={'email_login': login_user.email_login})
+        # assert IsLoggedIn == True
         assert response_user_view.json() == 200
 
 
