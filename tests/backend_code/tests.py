@@ -4,6 +4,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from backend_code.models import Customer, Product, Store, StoreCategory, ProductCategory
+from backend_code.permissions import IsLoggedIn
 from marketplace import settings
 
 
@@ -20,9 +21,9 @@ def sample_user():
 
 @pytest.fixture
 def login_user(sample_user):
-    token_ = Token.objects.filter(user=sample_user).first()
-    if token_:
-        token_.delete()
+    # token_ = Token.objects.filter(user=sample_user).first()
+    # if token_:
+    #     token_.delete()
     Token.objects.create(user=sample_user)
     login_user = sample_user
     return login_user
@@ -71,6 +72,15 @@ class TestUser:
         response_login = client.post('/api/v1/login/', data={'email_login': sample_user.email_login, 'password': 'valid0_password'})
         assert response_login.status_code == 200
 
+    # user view
+    # @pytest.mark.parametrize('email_login_check', ['error', settings.EMAIL_TO_USER])
+    @pytest.mark.django_db(transaction=True)
+    def test_user_view(self, client, login_user):
+        # token = Token.objects.create(user=sample_user)
+        # sample_user.permissions.add('IsLoggedIn')
+        response_user_view = client.get('/api/v1/customers/', data={'email_login': login_user.email_login})
+        assert response_user_view.json() == 200
+
 
 class TestProduct:
 
@@ -80,3 +90,17 @@ class TestProduct:
     def test_get_product(self, client, sample_product, stock_number_check):
         response_get_product = client.get(f'/api/v1/goods/{stock_number_check}/')
         assert response_get_product.status_code == 200
+
+    # search product by name/model
+    @pytest.mark.parametrize('search_keyword', ['unused_keyword', 'n'])
+    @pytest.mark.django_db(transaction=True)
+    def test_search_product(self, client, sample_product, search_keyword):
+        response_search_product = client.get(f'/api/v1/goods/?s={search_keyword}')
+        assert response_search_product.json()['count'] > 0
+
+    # delete product (with auth)
+    @pytest.mark.parametrize('stock_number_check', [1, 15])
+    @pytest.mark.django_db(transaction=True)
+    def test_delete_product(self, client, sample_product, stock_number_check):
+        response_delete_product = client.get(f'/api/v1/goods/{stock_number_check}/')
+        assert response_delete_product.status_code == 200
