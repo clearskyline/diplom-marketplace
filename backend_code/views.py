@@ -89,27 +89,27 @@ class LoginView(APIView):
         if {'email_login', 'password'}.issubset(request.data):
             current_customer = Customer.objects.filter(email_login=request.data['email_login']).first()
             if not current_customer:
-                return JsonResponse({'Status': False, 'Error': 'Customer with this email does not exist'})
+                return JsonResponse({'Status': False, 'Error': 'Customer with this email does not exist'}, status=401)
             else:
                 if not current_customer.email_verified:
                     if request.data.get('resend_email') == 'True':
                         send_activation_email(current_customer, request)
-                        return JsonResponse({'Status': False, 'Error': 'Please confirm your email address'})
+                        return JsonResponse({'Status': False, 'Error': 'Please confirm your email address'}, status=401)
                     else:
-                        return JsonResponse({'Status': False, 'Error': 'Please request confirmation link again'})
+                        return JsonResponse({'Status': False, 'Error': 'Please request confirmation link again'}, status=401)
                 else:
                     check_pass = check_password(request.data['password'], current_customer.password)
                     if not check_pass:
-                        return JsonResponse({'Status': False, 'Error': 'Incorrect password'})
+                        return JsonResponse({'Status': False, 'Error': 'Incorrect password'}, status=401)
                     if current_customer.is_active:
                         token_ = Token.objects.filter(user=current_customer).first()
                         if token_:
                             token_.delete()
                         token = Token.objects.create(user=current_customer)
-                        return JsonResponse({'Status': True, 'Token': token.key, 'Token creation time': token.created})
+                        return JsonResponse({'Status': True, 'Token': token.key, 'Token creation time': token.created}, status=200)
                     else:
-                        return JsonResponse({'Status': False, 'Error': 'Customer is not active'})
-        return JsonResponse({'Status': False, 'Error': 'Please provide email and password'})
+                        return JsonResponse({'Status': False, 'Error': 'Customer is not active'}, status=401)
+        return JsonResponse({'Status': False, 'Error': 'Please provide email and password'}, status=401)
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -162,8 +162,8 @@ class CustomerSignUp(APIView):
                 send_activation_email(current_user, request)
                 return Response(user_serializer.data, status=201)
             else:
-                return JsonResponse({'Status': False, 'Error': user_serializer.errors})
-        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+                return JsonResponse({'Status': False, 'Error': user_serializer.errors}, status=401)
+        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
 
 
 # user view, edit, delete
