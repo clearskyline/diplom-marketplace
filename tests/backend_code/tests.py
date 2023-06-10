@@ -4,8 +4,6 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from backend_code.models import Customer, Product, Store, StoreCategory, ProductCategory
-from backend_code.permissions import IsLoggedIn
-from backend_code.views import LoginView
 from marketplace import settings
 
 
@@ -22,9 +20,6 @@ def sample_user():
 
 @pytest.fixture
 def login_user(sample_user):
-    # token_ = Token.objects.filter(user=sample_user).first()
-    # if token_:
-    #     token_.delete()
     Token.objects.create(user=sample_user)
     login_user = sample_user
     return login_user
@@ -79,8 +74,21 @@ class TestUser:
     @pytest.mark.django_db(transaction=True)
     def test_user_view(self, client, login_user):
         response_user_view = client.get('/api/v1/customers/', data={'email_login': login_user.email_login})
-        # assert IsLoggedIn == True
         assert response_user_view.json() == 200
+
+    # user edit
+    @pytest.mark.parametrize('password_change', ['short', 'new_valid0_password'])
+    @pytest.mark.django_db(transaction=True)
+    def test_user_patch(self, client, login_user, password_change):
+        response_user_patch = client.patch('/api/v1/customers/', data = {'password': password_change})
+        assert response_user_patch.json() == 200
+
+    # user delete
+    @pytest.mark.parametrize('delete_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.django_db(transaction=True)
+    def test_user_delete(self, client, login_user, delete_user):
+        response_user_delete = client.delete('/api/v1/customers/', data={'email_login': delete_user})
+        assert response_user_delete.status_code == 204
 
 
 class TestProduct:
