@@ -187,17 +187,17 @@ class CustomerViewSet(viewsets.ModelViewSet):
                 pass_errors = []
                 for err in password_errors:
                     pass_errors.append(err)
-                return JsonResponse({'Status': False, 'Errors': {'password': pass_errors}})
+                return JsonResponse({'Status': False, 'Errors': {'password': pass_errors}}, status=401)
         current_customer = self.get_object()
-        if request.data['registered_vendor'] == 'True' and not current_customer.seller_vendor_id:
+        if request.data.get('registered_vendor') == 'True' and not current_customer.seller_vendor_id:
             # request.data['seller_vendor_id'] = 56120
             request.data['seller_vendor_id'] = random.randint(200,20000)
         serializer = CustomerSerializer(current_customer, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=200)
         else:
-            return JsonResponse({'Status': False, 'Error': serializer.errors})
+            return JsonResponse({'Status': False, 'Error': serializer.errors}, status=401)
 
 
 # store view, create, update, delete

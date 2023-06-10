@@ -14,7 +14,7 @@ def client():
 
 @pytest.fixture
 def sample_user():
-    sample_user = Customer.objects.create(**{'first_name': '1', 'last_name': '1', 'email_login': settings.EMAIL_TO_USER, 'password': make_password('valid0_password'), 'user_name': '1', 'phone_number': '1', 'area_code': '1', 'registered_vendor': '1', 'is_active': '1'})
+    sample_user = Customer.objects.create(**{'first_name': '1', 'last_name': '1', 'email_login': settings.EMAIL_TO_USER, 'password': make_password('valid0_password'), 'user_name': '1', 'phone_number': '1', 'area_code': '1', 'registered_vendor': True, 'is_active': '1'})
     return sample_user
 
 
@@ -55,7 +55,7 @@ class TestUser:
     @pytest.mark.parametrize('password', ['short', 'valid0_password'])
     @pytest.mark.django_db(transaction=True)
     def test_user_signup(self, client, user_email, password):
-        sample_user = {'first_name': '1', 'last_name': '1', 'email_login': user_email, 'password': password, 'user_name': '1', 'phone_number': '1', 'area_code': '1', 'registered_vendor': '1', 'is_active': '1'}
+        sample_user = {'first_name': '1', 'last_name': '1', 'email_login': user_email, 'password': password, 'user_name': '1', 'phone_number': '1', 'area_code': '1', 'registered_vendor': True, 'is_active': True}
         response_signup = client.post('/api/v1/user-signup/', data=sample_user)
         assert response_signup.status_code == 201
 
@@ -70,18 +70,18 @@ class TestUser:
         assert response_login.status_code == 200
 
     # user view
-    # @pytest.mark.parametrize('email_login_check', ['error', settings.EMAIL_TO_USER])
+    @pytest.mark.parametrize('email_login_check', ['no_user@none.com', settings.EMAIL_TO_USER])
     @pytest.mark.django_db(transaction=True)
-    def test_user_view(self, client, login_user):
-        response_user_view = client.get('/api/v1/customers/', data={'email_login': login_user.email_login})
-        assert response_user_view.json() == 200
+    def test_user_view(self, client, login_user, email_login_check):
+        response_user_view = client.get('/api/v1/customers/', data={'email_login': email_login_check})
+        assert response_user_view.json() == 0
 
     # user edit
     @pytest.mark.parametrize('password_change', ['short', 'new_valid0_password'])
     @pytest.mark.django_db(transaction=True)
     def test_user_patch(self, client, login_user, password_change):
-        response_user_patch = client.patch('/api/v1/customers/', data = {'password': password_change})
-        assert response_user_patch.json() == 200
+        response_user_patch = client.patch('/api/v1/customers/', data = {'email_login': login_user.email_login, 'password': password_change})
+        assert response_user_patch.status_code == 200
 
     # user delete
     @pytest.mark.parametrize('delete_user', ['no_user@none.com', settings.EMAIL_TO_USER])
