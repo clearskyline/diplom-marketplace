@@ -79,9 +79,10 @@ class TestUser:
     # user edit
     @pytest.mark.parametrize('patch_user_email', ['no_user@none.com', settings.EMAIL_TO_USER])
     @pytest.mark.parametrize('password_change', ['short', 'new_valid0_password'])
+    @pytest.mark.parametrize('registered_vendor_change', ['no_value', False])
     @pytest.mark.django_db(transaction=True)
-    def test_user_patch(self, client, login_user, patch_user_email, password_change):
-        response_user_patch = client.patch('/api/v1/customers/', data = {'email_login': patch_user_email, 'password': password_change})
+    def test_user_patch(self, client, login_user, patch_user_email, password_change, registered_vendor_change):
+        response_user_patch = client.patch('/api/v1/customers/', data = {'email_login': patch_user_email, 'password': password_change, 'registered_vendor': registered_vendor_change})
         assert response_user_patch.status_code == 200
 
     # user delete
