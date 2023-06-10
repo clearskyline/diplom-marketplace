@@ -15,6 +15,7 @@ def client():
 @pytest.fixture
 def sample_user():
     sample_user = Customer.objects.create(**{'first_name': '1', 'last_name': '1', 'email_login': settings.EMAIL_TO_USER, 'password': make_password('valid0_password'), 'user_name': '1', 'phone_number': '1', 'area_code': '1', 'registered_vendor': True, 'is_active': True})
+    sample_user.email_verified = True
     return sample_user
 
 
@@ -115,3 +116,14 @@ class TestProduct:
     def test_delete_product(self, client, sample_product, stock_number_check):
         response_delete_product = client.get(f'/api/v1/goods/{stock_number_check}/')
         assert response_delete_product.status_code == 200
+
+
+class TestStore:
+
+    # store create
+    @pytest.mark.parametrize('store_create_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.parametrize('store_create_price', ['chars', 50])
+    @pytest.mark.django_db(transaction=True)
+    def test_store_create(self, client, login_user, sample_store_cat, store_create_user, store_create_price):
+        response_store_create = client.post('/api/v1/store/', data={'email_login': store_create_user, 'name': 'name', 'address': 'address', 'nominal_delivery_price': store_create_price, 'store_cat_id': sample_store_cat.store_cat_id})
+        assert response_store_create.status_code == 200

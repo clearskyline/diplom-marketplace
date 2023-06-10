@@ -174,7 +174,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
     permission_classes = [IsLoggedIn,]
 
     def get_object(self):
-        return Customer.objects.get(email_login=self.request.data['email_login'])
+        return Customer.objects.get(email_login=self.request.data.get('email_login'))
 
     # user edit
     def update(self, request, *args, **kwargs):
@@ -226,15 +226,15 @@ class StoreViewSet(viewsets.ModelViewSet):
 
     # store create
     def create(self, request, *args, **kwargs):
-        if {'email_login', 'name', 'address', 'url', 'store_cat_id', 'nominal_delivery_price'}.issubset(request.data):
+        if {'email_login', 'name', 'address', 'store_cat_id', 'nominal_delivery_price'}.issubset(request.data):
             try:
                 current_customer = Customer.objects.filter(email_login=request.data['email_login']).first()
                 if not current_customer.registered_vendor:
-                    return JsonResponse({'Status': False, 'Error': 'You are not registered as a vendor'})
+                    return JsonResponse({'Status': False, 'Error': 'You are not registered as a vendor'}, status=401)
                 else:
                     store_cat = StoreCategory.objects.filter(store_cat_id=request.data['store_cat_id']).first()
                     if not store_cat:
-                        return JsonResponse({'Status': False, 'Error': 'Please create a category for this store'})
+                        return JsonResponse({'Status': False, 'Error': 'Please create a category for this store'}, status=401)
                     else:
                         request.data._mutable = True
                         request.data['vendor_id'] = current_customer.id
@@ -242,12 +242,12 @@ class StoreViewSet(viewsets.ModelViewSet):
                         current_store = StoreSerializer(data=request.data)
                         if current_store.is_valid():
                             current_store.save()
-                            return Response(current_store.data)
+                            return Response(current_store.data, status=200)
                         else:
-                            return JsonResponse({'Status': False, 'Error': current_store.errors})
+                            return JsonResponse({'Status': False, 'Error': current_store.errors}, status=401)
             except ValueError as err:
-                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
-        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'}, status=401)
+        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
 
     # store update
     def update(self, request, *args, **kwargs):
