@@ -124,6 +124,22 @@ class TestStore:
     @pytest.mark.parametrize('store_create_user', ['no_user@none.com', settings.EMAIL_TO_USER])
     @pytest.mark.parametrize('store_create_price', ['chars', 50])
     @pytest.mark.django_db(transaction=True)
-    def test_store_create(self, client, login_user, sample_store_cat, store_create_user, store_create_price):
+    def test_store_create(self, client, sample_store_cat, store_create_user, store_create_price):
         response_store_create = client.post('/api/v1/store/', data={'email_login': store_create_user, 'name': 'name', 'address': 'address', 'nominal_delivery_price': store_create_price, 'store_cat_id': sample_store_cat.store_cat_id})
         assert response_store_create.status_code == 200
+
+    # store delete
+    @pytest.mark.parametrize('store_delete_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.django_db(transaction=True)
+    def test_store_delete(self, client, login_user, store_delete_user):
+        response_store_delete = client.delete('/api/v1/store/', data={'email_login': store_delete_user})
+        assert response_store_delete.status_code == 200
+
+
+    # store view
+    @pytest.mark.django_db(transaction=True)
+    def test_store_view(self, client, login_user):
+        response_store_view = client.get('/api/v1/store/', data={'email_login': login_user.email_login})
+        assert response_store_view.json() == 0
+
+
