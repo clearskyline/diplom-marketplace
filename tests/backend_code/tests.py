@@ -131,15 +131,23 @@ class TestStore:
     # store delete
     @pytest.mark.parametrize('store_delete_user', ['no_user@none.com', settings.EMAIL_TO_USER])
     @pytest.mark.django_db(transaction=True)
-    def test_store_delete(self, client, login_user, store_delete_user):
+    def test_store_delete(self, client, sample_store, store_delete_user):
         response_store_delete = client.delete('/api/v1/store/', data={'email_login': store_delete_user})
         assert response_store_delete.status_code == 200
 
 
     # store view
+    @pytest.mark.parametrize('store_view_user', ['no_user@none.com', settings.EMAIL_TO_USER])
     @pytest.mark.django_db(transaction=True)
-    def test_store_view(self, client, login_user):
-        response_store_view = client.get('/api/v1/store/', data={'email_login': login_user.email_login})
-        assert response_store_view.json() == 0
+    def test_store_view(self, client, sample_store, store_view_user):
+        response_store_view = client.get('/api/v1/store/', data={'email_login': store_view_user})
+        assert response_store_view.status_code == 200
 
+    # store update
+    @pytest.mark.parametrize('store_update_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.parametrize('store_update_price', ['chars', 50])
+    @pytest.mark.django_db(transaction=True)
+    def test_store_update(self, client, sample_store, store_update_user, store_update_price):
+        response_store_update = client.patch('/api/v1/store/', data={'email_login': store_update_user, 'nominal_delivery_price': store_update_price})
+        assert response_store_update.status_code == 200
 

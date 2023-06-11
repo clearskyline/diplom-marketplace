@@ -257,20 +257,20 @@ class StoreViewSet(viewsets.ModelViewSet):
                 if request.data.get('store_cat_id'):
                     current_store_cat = StoreCategory.objects.filter(store_cat_id=request.data.get('store_cat_id')).first()
                     if not current_store_cat:
-                        return JsonResponse({'Status': False, 'Error': 'Store category not found'})
+                        return JsonResponse({'Status': False, 'Error': 'Store category not found'}, status=401)
                     else:
                         request.data._mutable = True
                         request.data['cats'] = current_store_cat.id
                 serializer = StoreSerializer(current_store, data=request.data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
-                    return Response(serializer.data)
+                    return Response(serializer.data, status=200)
                 else:
-                    return JsonResponse({'Status': False, 'Error': serializer.errors})
+                    return JsonResponse({'Status': False, 'Error': serializer.errors}, status=401)
             except ValueError as err:
-                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'}, status=401)
         else:
-            return JsonResponse({'Status': False, 'Error': 'Store not found'})
+            return JsonResponse({'Status': False, 'Error': 'Store not found'}, status=401)
 
 
 class BasketViewSet(viewsets.ModelViewSet):
