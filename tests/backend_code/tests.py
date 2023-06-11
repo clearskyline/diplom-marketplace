@@ -3,7 +3,7 @@ from django.contrib.auth.hashers import make_password
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from backend_code.models import Customer, Product, Store, StoreCategory, ProductCategory
+from backend_code.models import Customer, Product, Store, StoreCategory, ProductCategory, Basket
 from marketplace import settings
 
 
@@ -47,6 +47,12 @@ def sample_product_cat(login_user):
 def sample_product(sample_store, sample_product_cat):
     sample_product = Product.objects.create(stock_number=15, name='name', amount=5, price=100, weight_class=1, recommended_price=50, delivery_store=sample_store, product_cat=sample_product_cat)
     return sample_product
+
+
+@pytest.fixture
+def sample_basket(login_user, sample_product, sample_store):
+    sample_basket = Basket.objects.create(b_customer=login_user, b_product=sample_product, b_vendor=sample_store, amount=100)
+    return sample_basket
 
 
 class TestUser:
@@ -150,4 +156,16 @@ class TestStore:
     def test_store_update(self, client, sample_store, store_update_user, store_update_price):
         response_store_update = client.patch('/api/v1/store/', data={'email_login': store_update_user, 'nominal_delivery_price': store_update_price})
         assert response_store_update.status_code == 200
+
+
+class TestBasket:
+
+    # basket create/update
+    @pytest.mark.parametrize('basket_create_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.parametrize('basket_create_stock_number', ['chars', 15])
+    @pytest.mark.django_db(transaction=True)
+    def test_basket_create(self, client, sample_product, basket_create_user, basket_create_stock_number):
+        response_basket_create = client.post('/api/v1/basket/', data={'email_login': basket_create_user, 'stock_number': basket_create_stock_number, 'amount': 100})
+        assert response_basket_create.status_code == 200
+
 

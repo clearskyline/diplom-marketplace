@@ -296,11 +296,11 @@ class BasketViewSet(viewsets.ModelViewSet):
                      b_vendor=basket_vendor,
                      defaults={'amount': request.data['amount']})
                     basket_serializer = BasketSerializer(new_purchase_item)
-                    return Response(basket_serializer.data)
-                return JsonResponse({'Status': False, 'Errors': 'Product or store not found'})
+                    return Response(basket_serializer.data, status=200)
+                return JsonResponse({'Status': False, 'Errors': 'Product or store not found'}, status=401)
             except ValueError as err:
-                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
-        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'}, status=401)
+        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
 
     # basket delete
     def destroy(self, request, *args, **kwargs):
