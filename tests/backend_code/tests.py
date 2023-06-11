@@ -162,10 +162,23 @@ class TestBasket:
 
     # basket create/update
     @pytest.mark.parametrize('basket_create_user', ['no_user@none.com', settings.EMAIL_TO_USER])
-    @pytest.mark.parametrize('basket_create_stock_number', ['chars', 15])
+    @pytest.mark.parametrize('basket_create_stock_number', ['chars', 500, 15])
     @pytest.mark.django_db(transaction=True)
     def test_basket_create(self, client, sample_product, basket_create_user, basket_create_stock_number):
         response_basket_create = client.post('/api/v1/basket/', data={'email_login': basket_create_user, 'stock_number': basket_create_stock_number, 'amount': 100})
         assert response_basket_create.status_code == 200
 
+    # basket view
+    @pytest.mark.parametrize('basket_view_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.django_db(transaction=True)
+    def test_basket_view(self, client, sample_basket, basket_view_user):
+        response_basket_view = client.get('/api/v1/basket/', data={'email_login': basket_view_user})
+        assert response_basket_view.status_code == 200
 
+    # basket delete
+    @pytest.mark.parametrize('basket_delete_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.parametrize('basket_delete_stock_number', ['chars', 500, 15])
+    @pytest.mark.django_db(transaction=True)
+    def test_basket_delete(self, client, sample_basket, basket_delete_user, basket_delete_stock_number):
+        response_basket_delete = client.delete('/api/v1/basket/', data={'email_login': basket_delete_user, 'stock_number': basket_delete_stock_number})
+        assert response_basket_delete.status_code == 204

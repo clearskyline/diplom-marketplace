@@ -221,8 +221,8 @@ class StoreViewSet(viewsets.ModelViewSet):
         current_store = self.get_object()
         if current_store:
             current_store.delete()
-            return JsonResponse({'Status': True, 'Message': 'This store has been deleted'})
-        return JsonResponse({'Status': False, 'Error': 'Store not found'})
+            return JsonResponse({'Status': True, 'Message': 'This store has been deleted'}, status=204)
+        return JsonResponse({'Status': False, 'Error': 'Store not found'}, status=404)
 
     # store create
     def create(self, request, *args, **kwargs):
@@ -257,7 +257,7 @@ class StoreViewSet(viewsets.ModelViewSet):
                 if request.data.get('store_cat_id'):
                     current_store_cat = StoreCategory.objects.filter(store_cat_id=request.data.get('store_cat_id')).first()
                     if not current_store_cat:
-                        return JsonResponse({'Status': False, 'Error': 'Store category not found'}, status=401)
+                        return JsonResponse({'Status': False, 'Error': 'Store category not found'}, status=404)
                     else:
                         request.data._mutable = True
                         request.data['cats'] = current_store_cat.id
@@ -270,9 +270,10 @@ class StoreViewSet(viewsets.ModelViewSet):
             except ValueError as err:
                 return JsonResponse({'Status': False, 'Error': 'Invalid data'}, status=401)
         else:
-            return JsonResponse({'Status': False, 'Error': 'Store not found'}, status=401)
+            return JsonResponse({'Status': False, 'Error': 'Store not found'}, status=404)
 
 
+# basket view, create/update, delete
 class BasketViewSet(viewsets.ModelViewSet):
 
     queryset = Basket.objects.all()
@@ -297,7 +298,7 @@ class BasketViewSet(viewsets.ModelViewSet):
                      defaults={'amount': request.data['amount']})
                     basket_serializer = BasketSerializer(new_purchase_item)
                     return Response(basket_serializer.data, status=200)
-                return JsonResponse({'Status': False, 'Errors': 'Product or store not found'}, status=401)
+                return JsonResponse({'Status': False, 'Errors': 'Product or store not found'}, status=404)
             except ValueError as err:
                 return JsonResponse({'Status': False, 'Error': 'Invalid data'}, status=401)
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
@@ -309,12 +310,12 @@ class BasketViewSet(viewsets.ModelViewSet):
                 current_item = self.get_queryset().filter(b_product__stock_number=request.data['stock_number']).first()
                 if current_item:
                     current_item.delete()
-                    return JsonResponse({'Status': True, 'Message': 'Item removed from basket'})
+                    return JsonResponse({'Status': True, 'Message': 'Item removed from basket'}, status=204)
                 else:
-                    return JsonResponse({'Status': False, 'Error': 'Item not found'})
+                    return JsonResponse({'Status': False, 'Error': 'Item not found'}, status=404)
             except ValueError as err:
-                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
-        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'}, status=401)
+        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
 
 
 class StoreCatViewSet(viewsets.ModelViewSet):
