@@ -222,7 +222,7 @@ class StoreViewSet(viewsets.ModelViewSet):
         current_store = self.get_object()
         if current_store:
             current_store.delete()
-            return JsonResponse({'Status': True, 'Message': 'This store has been deleted'}, status=204)
+            return JsonResponse({'Status': True, 'Message': 'This store has been deleted'}, status=200)
         return JsonResponse({'Status': False, 'Error': 'Store not found'}, status=404)
 
     # store create
@@ -311,7 +311,7 @@ class BasketViewSet(viewsets.ModelViewSet):
                 current_item = self.get_queryset().filter(b_product__stock_number=request.data['stock_number']).first()
                 if current_item:
                     current_item.delete()
-                    return JsonResponse({'Status': True, 'Message': 'Item removed from basket'}, status=204)
+                    return JsonResponse({'Status': True, 'Message': 'Item removed from basket'}, status=200)
                 else:
                     return JsonResponse({'Status': False, 'Error': 'Item not found'}, status=404)
             except ValueError as err:
@@ -358,7 +358,7 @@ class StoreCatViewSet(viewsets.ModelViewSet):
                     store_check = Store.objects.filter(cats=store_cat).first()
                     if not store_check:
                         store_cat.delete()
-                        return JsonResponse({'Status': True, 'Message': 'Store category deleted'}, status=204)
+                        return JsonResponse({'Status': True, 'Message': 'Store category deleted'}, status=200)
                     else:
                         return JsonResponse({'Status': False, 'Message': 'Store category not empty'}, status=406)
                 else:
@@ -408,7 +408,7 @@ class ProductCatViewSet(viewsets.ModelViewSet):
                 current_pr_cat = self.get_object()
                 if current_pr_cat:
                     current_pr_cat.delete()
-                    return JsonResponse({'Status': True, 'Message': 'Product category deleted'}, status=204)
+                    return JsonResponse({'Status': True, 'Message': 'Product category deleted'}, status=200)
                 else:
                     return JsonResponse({'Status': False, 'Error': 'Product category not found'}, status=404)
             except ValueError as err:
@@ -479,8 +479,11 @@ class OrderViewSet(viewsets.ModelViewSet):
     # orders view
     def order_list(self, request, *args, **kwargs):
         order_set = self.get_queryset()
-        order_set_ser = OrderSerializer(order_set, many=True)
-        return Response(order_set_ser.data)
+        if order_set:
+            order_set_ser = OrderSerializer(order_set, many=True)
+            return Response(order_set_ser.data, status=200)
+        else:
+            return JsonResponse({'Status': False, 'Error': 'You have no orders'}, status=404)
 
     # order delete
     def destroy(self, request, *args, **kwargs):
@@ -488,16 +491,16 @@ class OrderViewSet(viewsets.ModelViewSet):
             try:
                 current_order = self.get_queryset().filter(order_number=request.data['order_number']).first()
                 if not current_order:
-                    return JsonResponse({'Status': False, 'Error': 'Order not found'})
+                    return JsonResponse({'Status': False, 'Error': 'Order not found'}, status=404)
                 else:
                     if current_order.status == 'new' or current_order.status == 'confirmed' or current_order.status == 'assembled':
                         current_order.delete()
-                        return JsonResponse({'Status': True, 'Message': f'Order {request.data["order_number"]} deleted'})
+                        return JsonResponse({'Status': True, 'Message': 'Order deleted'}, status=200)
                     else:
-                        return JsonResponse({'Status': False, 'Error': f'Order {request.data["order_number"]} cannot be deleted as it has already been dispatched. If you dont pick it up, it will be automatically cancelled'})
+                        return JsonResponse({'Status': False, 'Error': f'Order {request.data["order_number"]} cannot be deleted as it has already been dispatched. If you dont pick it up, it will be automatically cancelled'}, status=406)
             except ValueError as err:
-                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
-        return JsonResponse({'Status': False, 'Error': 'Please provide order number'})
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'}, status=401)
+        return JsonResponse({'Status': False, 'Error': 'Please provide order number'}, status=401)
 
 
 # order detail view

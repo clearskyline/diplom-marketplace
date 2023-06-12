@@ -4,7 +4,7 @@ from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from backend_code.models import Customer, Product, Store, StoreCategory, ProductCategory, Basket
+from backend_code.models import Customer, Product, Store, StoreCategory, ProductCategory, Basket, Order
 from marketplace import settings
 
 
@@ -56,6 +56,11 @@ def sample_product(sample_store, sample_product_cat):
 def sample_basket(login_user, sample_product, sample_store):
     sample_basket = Basket.objects.create(b_customer=login_user, b_product=sample_product, b_vendor=sample_store, amount=100)
     return sample_basket
+
+@pytest.fixture
+def sample_order(login_user, sample_basket):
+    sample_order = Order.objects.create(order_number=1, order_customer=login_user, area_code=1, final_delivery_price=100, total_price=200, status='new')
+    return sample_order
 
 
 class TestUser:
@@ -142,7 +147,7 @@ class TestStore:
     @pytest.mark.django_db(transaction=True)
     def test_store_delete(self, client, sample_store, store_delete_user):
         response_store_delete = client.delete('/api/v1/store/', data={'email_login': store_delete_user})
-        assert response_store_delete.status_code == 204
+        assert response_store_delete.status_code == 200
 
 
     # store view
@@ -184,7 +189,7 @@ class TestBasket:
     @pytest.mark.django_db(transaction=True)
     def test_basket_delete(self, client, sample_basket, basket_delete_user, basket_delete_stock_number):
         response_basket_delete = client.delete('/api/v1/basket/', data={'email_login': basket_delete_user, 'stock_number': basket_delete_stock_number})
-        assert response_basket_delete.status_code == 204
+        assert response_basket_delete.status_code == 200
 
 
 class TestStoreCat:
@@ -212,7 +217,7 @@ class TestStoreCat:
     @pytest.mark.django_db(transaction=True)
     def test_stc_delete(self, client, sample_store_cat, stc_delete_user, stc_delete_id):
         response_stc_delete = client.delete('/api/v1/store-cat/', data={'email_login': stc_delete_user, 'store_cat_id': stc_delete_id})
-        assert response_stc_delete.status_code == 204
+        assert response_stc_delete.status_code == 200
 
     # store cat delete with existing stores
     @pytest.mark.django_db(transaction=True)
@@ -244,7 +249,7 @@ class TestProductCat:
     @pytest.mark.django_db(transaction=True)
     def test_pc_delete(self, client, sample_product_cat, pc_delete_user, pc_delete_id):
         response_pc_delete = client.delete('/api/v1/prod-cat/', data={'email_login': pc_delete_user, 'prod_cat_id': pc_delete_id})
-        assert response_pc_delete.status_code == 204
+        assert response_pc_delete.status_code == 200
 
 
 class TestOrder:
@@ -276,3 +281,25 @@ class TestOrder:
         response_order_create_check_basket = client.post('/api/v1/order/', data={'email_login': settings.EMAIL_TO_USER, 'express_delivery': True})
         login_user_basket = Basket.objects.filter(b_customer=login_user).first()
         assert login_user_basket is None
+
+    # order list view
+    @pytest.mark.parametrize('order_list_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.django_db(transaction=True)
+    def test_order_list(self, client, sample_order, order_list_user):
+        response_order_list = client.get('/api/v1/order/', data={'email_login': order_list_user})
+        assert response_order_list.status_code == 200
+
+    # order delete
+    @pytest.mark.parametrize('order_delete_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.parametrize('order_delete_number', [None, 'chars', 10, 1])
+    @pytest.mark.parametrize('order_delete_status', ['assembled', 'dispatched'])
+    @pytest.mark.django_db(transaction=True)
+    def test_order_delete(self, client, sample_order, order_delete_user, order_delete_number, order_delete_status):
+        sample_order.status = order_delete_status
+        sample_order.save()
+        response_order_delete = client.delete('/api/v1/order/', data={'email_login': order_delete_user, 'order_number': order_delete_number})
+        assert response_order_delete.status_code == 200
+
+
+class TestOrderDetail:
+    pass
