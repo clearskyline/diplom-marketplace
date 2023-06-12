@@ -377,7 +377,8 @@ class ProductCatViewSet(viewsets.ModelViewSet):
 
     def get_object(self):
         try:
-            return ProductCategory.objects.filter(prod_cat_id=self.request.data.get('prod_cat_id')).first()
+            obj = get_object_or_404(ProductCategory, prod_cat_id=self.request.data['prod_cat_id'])
+            return obj
         except ValueError as err:
             return None
 
