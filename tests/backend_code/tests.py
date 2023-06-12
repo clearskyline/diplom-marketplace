@@ -195,3 +195,11 @@ class TestStoreCat:
         response_stc_create = client.post('/api/v1/store-cat/', data={'email_login': stc_create_user, 'name': stc_create_name})
         assert response_stc_create.status_code == 200
 
+
+    # store cat view
+    @pytest.mark.parametrize('stc_view_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.parametrize('stc_view_id', [None, 100, 1])
+    @pytest.mark.django_db(transaction=True)
+    def test_stc_view(self, client, login_user, stc_view_user, stc_view_id):
+        response_stc_view = client.get('/api/v1/store-cat/', data={'email_login': stc_view_user, 'store_cat_id': stc_view_id})
+        assert response_stc_view.status_code == 200
