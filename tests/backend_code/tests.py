@@ -35,6 +35,8 @@ def sample_store_cat(login_user):
 @pytest.fixture
 def sample_store(login_user, sample_store_cat):
     sample_store = Store.objects.create(vendor_id=login_user, name='name', address='address', nominal_delivery_price=50, status=True)
+    sample_store.cats.add(sample_store_cat.id)
+    sample_store.save()
     return sample_store
 
 
@@ -200,6 +202,20 @@ class TestStoreCat:
     @pytest.mark.parametrize('stc_view_user', ['no_user@none.com', settings.EMAIL_TO_USER])
     @pytest.mark.parametrize('stc_view_id', [None, 100, 1])
     @pytest.mark.django_db(transaction=True)
-    def test_stc_view(self, client, login_user, stc_view_user, stc_view_id):
+    def test_stc_view(self, client, sample_store_cat, stc_view_user, stc_view_id):
         response_stc_view = client.get('/api/v1/store-cat/', data={'email_login': stc_view_user, 'store_cat_id': stc_view_id})
         assert response_stc_view.status_code == 200
+
+    # store cat delete
+    @pytest.mark.parametrize('stc_delete_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.parametrize('stc_delete_id', [100, 1])
+    @pytest.mark.django_db(transaction=True)
+    def test_stc_delete(self, client, sample_store_cat, stc_delete_user, stc_delete_id):
+        response_stc_delete = client.delete('/api/v1/store-cat/', data={'email_login': stc_delete_user, 'store_cat_id': stc_delete_id})
+        assert response_stc_delete.status_code == 204
+
+    # store cat delete with existing stores
+    @pytest.mark.django_db(transaction=True)
+    def test_stc_delete_not_empty(self, client, sample_store):
+        response_stc_delete_not_empty = client.delete('/api/v1/store-cat/', data={'email_login': settings.EMAIL_TO_USER, 'store_cat_id': 1})
+        assert response_stc_delete_not_empty.status_code == 406

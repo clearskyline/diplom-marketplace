@@ -358,14 +358,14 @@ class StoreCatViewSet(viewsets.ModelViewSet):
                     store_check = Store.objects.filter(cats=store_cat).first()
                     if not store_check:
                         store_cat.delete()
-                        return JsonResponse({'Status': True, 'Message': 'Store category deleted'})
+                        return JsonResponse({'Status': True, 'Message': 'Store category deleted'}, status=204)
                     else:
-                        return JsonResponse({'Status': False, 'Message': 'Store category not empty'})
+                        return JsonResponse({'Status': False, 'Message': 'Store category not empty'}, status=406)
                 else:
-                    return JsonResponse({'Status': False, 'Error': 'Store category not found'})
+                    return JsonResponse({'Status': False, 'Error': 'Store category not found'}, status=404)
             except KeyError as err:
-                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
-        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'}, status=401)
+        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
 
 
 # product category view, create/update, delete
