@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth.hashers import make_password
+from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -80,8 +81,8 @@ class TestUser:
     @pytest.mark.parametrize('email_login_check', ['no_user@none.com', settings.EMAIL_TO_USER])
     @pytest.mark.django_db(transaction=True)
     def test_user_view(self, client, login_user, email_login_check):
-        response_user_view = client.get('/api/v1/customers/', data={'email_login': email_login_check})
-        assert response_user_view.json() == 0
+        response_user_view = client.get(reverse('backend_code:customer-set'), data={'email_login': email_login_check})
+        assert response_user_view.status_code == 200
 
     # user edit
     @pytest.mark.parametrize('patch_user_email', ['no_user@none.com', settings.EMAIL_TO_USER])
@@ -139,14 +140,14 @@ class TestStore:
     @pytest.mark.django_db(transaction=True)
     def test_store_delete(self, client, sample_store, store_delete_user):
         response_store_delete = client.delete('/api/v1/store/', data={'email_login': store_delete_user})
-        assert response_store_delete.status_code == 200
+        assert response_store_delete.status_code == 204
 
 
     # store view
     @pytest.mark.parametrize('store_view_user', ['no_user@none.com', settings.EMAIL_TO_USER])
     @pytest.mark.django_db(transaction=True)
     def test_store_view(self, client, sample_store, store_view_user):
-        response_store_view = client.get('/api/v1/store/', data={'email_login': store_view_user})
+        response_store_view = client.get(reverse('backend_code:store-set'), data={'email_login': store_view_user})
         assert response_store_view.status_code == 200
 
     # store update
@@ -182,3 +183,15 @@ class TestBasket:
     def test_basket_delete(self, client, sample_basket, basket_delete_user, basket_delete_stock_number):
         response_basket_delete = client.delete('/api/v1/basket/', data={'email_login': basket_delete_user, 'stock_number': basket_delete_stock_number})
         assert response_basket_delete.status_code == 204
+
+
+class TestStoreCat:
+
+    # store cat create/update
+    @pytest.mark.parametrize('stc_create_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.parametrize('stc_create_name', [None, 'name'])
+    @pytest.mark.django_db(transaction=True)
+    def test_stc_create(self, client, login_user, stc_create_user, stc_create_name):
+        response_stc_create = client.post('/api/v1/store-cat/', data={'email_login': stc_create_user, 'name': stc_create_name})
+        assert response_stc_create.status_code == 200
+

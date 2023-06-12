@@ -174,6 +174,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
     permission_classes = [IsLoggedIn,]
 
     def get_object(self):
+        print(self.request.data)
         return Customer.objects.get(email_login=self.request.data.get('email_login'))
 
     # user edit
@@ -317,7 +318,7 @@ class BasketViewSet(viewsets.ModelViewSet):
                 return JsonResponse({'Status': False, 'Error': 'Invalid data'}, status=401)
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
 
-
+# store category view, create/update, delete
 class StoreCatViewSet(viewsets.ModelViewSet):
 
     queryset = StoreCategory.objects.all()
@@ -334,16 +335,19 @@ class StoreCatViewSet(viewsets.ModelViewSet):
         if {'name'}.issubset(request.data):
             try:
                 if request.data.get('store_cat_id'):
-                    store_cat_id = request.data.get('store_cat_id')
+                    try:
+                        store_cat_id = int(request.data.get('store_cat_id'))
+                    except ValueError as err:
+                        store_cat_id = random.randint(100, 2000000)
                 else:
                     store_cat_id = random.randint(100, 2000000)
                 current_customer = Customer.objects.filter(email_login=request.data['email_login']).first()
                 store_cat, _ = StoreCategory.objects.update_or_create(store_cat_id=store_cat_id, store_cat_creator=current_customer, defaults={'name': request.data['name']})
                 store_cat__ser = StoreCatSerializer(store_cat)
-                return Response(store_cat__ser.data)
+                return Response(store_cat__ser.data, status=200)
             except IntegrityError as err:
-                return JsonResponse({'Status': False, 'Error': 'Category cannot be updated.'})
-        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+                return JsonResponse({'Status': False, 'Error': 'Category cannot be updated.'}, status=406)
+        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
 
     # store category delete
     def destroy(self, request, *args, **kwargs):
@@ -364,6 +368,7 @@ class StoreCatViewSet(viewsets.ModelViewSet):
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
 
+# product category view, create/update, delete
 class ProductCatViewSet(viewsets.ModelViewSet):
 
     queryset = ProductCategory.objects.all()
@@ -410,6 +415,7 @@ class ProductCatViewSet(viewsets.ModelViewSet):
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
 
 
+# order create, view (multiple), delete
 class OrderViewSet(viewsets.ModelViewSet):
 
     queryset = Order.objects.all()
@@ -493,6 +499,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         return JsonResponse({'Status': False, 'Error': 'Please provide order number'})
 
 
+# order detail view
 class OrderDetailViewSet(viewsets.ModelViewSet):
 
     queryset = Order.objects.all()
