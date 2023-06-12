@@ -302,4 +302,10 @@ class TestOrder:
 
 
 class TestOrderDetail:
-    pass
+
+    # get order details by slug (order number)
+    @pytest.mark.parametrize('order_number_check', [None, 1, 15])
+    @pytest.mark.django_db(transaction=True)
+    def test_get_order_details(self, client, sample_order, order_number_check):
+        response_get_order_details = client.get(f'/api/v1/order-detail/{order_number_check}/')
+        assert response_get_order_details.status_code == 200
