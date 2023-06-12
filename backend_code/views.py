@@ -395,10 +395,10 @@ class ProductCatViewSet(viewsets.ModelViewSet):
                 prod_cat_id = random.randint(100, 2000000)
             try:
                 prod_cat, _ = ProductCategory.objects.update_or_create(prod_cat_id=prod_cat_id, defaults={'name': request.data['name']},)
-                return Response(ProdCatSerializer(prod_cat).data)
+                return Response(ProdCatSerializer(prod_cat).data, status=200)
             except ValueError as err:
-                return JsonResponse({'Status': False, 'Error': 'Invalid data'})
-        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+                return JsonResponse({'Status': False, 'Error': 'Invalid data'}, status=401)
+        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
 
     # product category delete
     def destroy(self, request, *args, **kwargs):

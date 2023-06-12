@@ -219,3 +219,21 @@ class TestStoreCat:
     def test_stc_delete_not_empty(self, client, sample_store):
         response_stc_delete_not_empty = client.delete('/api/v1/store-cat/', data={'email_login': settings.EMAIL_TO_USER, 'store_cat_id': 1})
         assert response_stc_delete_not_empty.status_code == 406
+
+
+class TestProductCat:
+
+    # product category create/update
+    @pytest.mark.parametrize('pc_create_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.parametrize('pc_create_name', [None, 'name'])
+    @pytest.mark.django_db(transaction=True)
+    def test_pc_create(self, client, login_user, pc_create_user, pc_create_name):
+        response_pc_create = client.post('/api/v1/prod-cat/', data={'email_login': pc_create_user, 'name': pc_create_name})
+        assert response_pc_create.status_code == 200
+
+    # product category view
+    @pytest.mark.parametrize('pc_view_id', [None, 100, 1])
+    @pytest.mark.django_db(transaction=True)
+    def test_pc_view(self, client, sample_product_cat, pc_view_id):
+        response_pc_view = client.get('/api/v1/prod-cat/', data={'prod_cat_id': pc_view_id})
+        assert response_pc_view.status_code == 200
