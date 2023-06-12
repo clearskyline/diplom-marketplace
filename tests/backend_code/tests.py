@@ -304,8 +304,9 @@ class TestOrder:
 class TestOrderDetail:
 
     # get order details by slug (order number)
-    @pytest.mark.parametrize('order_number_check', [None, 1, 15])
+    @pytest.mark.parametrize('order_detail_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.parametrize('order_detail_number', [None, 1, 15])
     @pytest.mark.django_db(transaction=True)
-    def test_get_order_details(self, client, sample_order, order_number_check):
-        response_get_order_details = client.get(f'/api/v1/order-detail/{order_number_check}/')
+    def test_get_order_details(self, client, login_user, sample_order, order_detail_user, order_detail_number):
+        response_get_order_details = client.get(f'/api/v1/order-detail/{order_detail_number}/', data={'email_login': order_detail_user})
         assert response_get_order_details.status_code == 200
