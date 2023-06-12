@@ -408,12 +408,12 @@ class ProductCatViewSet(viewsets.ModelViewSet):
                 current_pr_cat = self.get_object()
                 if current_pr_cat:
                     current_pr_cat.delete()
-                    return JsonResponse({'Status': True, 'Message': 'Product category deleted'})
+                    return JsonResponse({'Status': True, 'Message': 'Product category deleted'}, status=204)
                 else:
-                    return JsonResponse({'Status': False, 'Error': 'Product category not found'})
+                    return JsonResponse({'Status': False, 'Error': 'Product category not found'}, status=404)
             except ValueError as err:
-                    return JsonResponse({'Status': False, 'Error': 'Invalid data'})
-        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'})
+                    return JsonResponse({'Status': False, 'Error': 'Invalid data'}, status=401)
+        return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
 
 
 # order create, view (multiple), delete
@@ -432,10 +432,10 @@ class OrderViewSet(viewsets.ModelViewSet):
             current_customer = Customer.objects.filter(email_login=request.data['email_login']).first()
             basket_ = Basket.objects.filter(b_customer=current_customer)
             if not basket_:
-                return JsonResponse({'Status': False, 'Error': 'Basket empty'})
+                return JsonResponse({'Status': False, 'Error': 'Basket empty'}, status=404)
             else:
                 if not current_customer.address:
-                    return JsonResponse({'Status': False, 'Error': 'Please provide customer address'})
+                    return JsonResponse({'Status': False, 'Error': 'Please provide customer address'}, status=401)
                 else:
                 # calculating max nominal delivery price and max weight class for all products in basket; actual delivery price and weight class is equal to the largest figure
                     vendor_nominal_del = []
@@ -467,14 +467,14 @@ class OrderViewSet(viewsets.ModelViewSet):
                     else:
                         return JsonResponse(
                                 {'Status': False,
-                                 'Error': order_creation.errors})
+                                 'Error': order_creation.errors}, status=401)
                     for basket_item in basket_:
                         current_product = Product.objects.filter(id=basket_item.b_product.id).first()
                         order_item = OrderItems.objects.create(number_of_order=current_order, order_product=current_product, order_prod_vendor=basket_item.b_vendor, order_prod_amount=basket_item.amount)
                     basket_.delete()
                     order_confirmation_email(current_customer, current_order, request)
-                    return Response(order_creation.data)
-        return JsonResponse({'Status': False, 'Error': 'Please provide express delivery info'})
+                    return Response(order_creation.data, status=201)
+        return JsonResponse({'Status': False, 'Error': 'Please provide express delivery info'}, status=401)
 
     # orders view
     def order_list(self, request, *args, **kwargs):

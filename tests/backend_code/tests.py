@@ -208,7 +208,7 @@ class TestStoreCat:
 
     # store cat delete
     @pytest.mark.parametrize('stc_delete_user', ['no_user@none.com', settings.EMAIL_TO_USER])
-    @pytest.mark.parametrize('stc_delete_id', [100, 1])
+    @pytest.mark.parametrize('stc_delete_id', [None, 100, 1])
     @pytest.mark.django_db(transaction=True)
     def test_stc_delete(self, client, sample_store_cat, stc_delete_user, stc_delete_id):
         response_stc_delete = client.delete('/api/v1/store-cat/', data={'email_login': stc_delete_user, 'store_cat_id': stc_delete_id})
@@ -237,3 +237,42 @@ class TestProductCat:
     def test_pc_view(self, client, sample_product_cat, pc_view_id):
         response_pc_view = client.get('/api/v1/prod-cat/', data={'prod_cat_id': pc_view_id})
         assert response_pc_view.status_code == 200
+
+    # product category delete
+    @pytest.mark.parametrize('pc_delete_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.parametrize('pc_delete_id', [100, None, 1])
+    @pytest.mark.django_db(transaction=True)
+    def test_pc_delete(self, client, sample_product_cat, pc_delete_user, pc_delete_id):
+        response_pc_delete = client.delete('/api/v1/prod-cat/', data={'email_login': pc_delete_user, 'prod_cat_id': pc_delete_id})
+        assert response_pc_delete.status_code == 204
+
+
+class TestOrder:
+
+    # order create
+    @pytest.mark.parametrize('order_create_user', ['no_user@none.com', settings.EMAIL_TO_USER])
+    @pytest.mark.parametrize('order_create_expr_delivery', [None, 'chars', True])
+    @pytest.mark.parametrize('order_create_address', [None, 'address'])
+    @pytest.mark.django_db(transaction=True)
+    def test_order_create(self, client, login_user, sample_basket, order_create_user, order_create_expr_delivery, order_create_address):
+        login_user.address = order_create_address
+        login_user.save()
+        response_order_create = client.post('/api/v1/order/', data={'email_login': order_create_user, 'express_delivery': order_create_expr_delivery})
+        assert response_order_create.status_code == 201
+
+    # order create with empty basket
+    @pytest.mark.django_db(transaction=True)
+    def test_order_create_with_empty_basket(self, client, login_user):
+        login_user.address = 'address'
+        login_user.save()
+        response_order_create_with_empty_basket = client.post('/api/v1/order/', data={'email_login': settings.EMAIL_TO_USER, 'express_delivery': True})
+        assert response_order_create_with_empty_basket.status_code == 404
+
+    # order create: check if basket is empty
+    @pytest.mark.django_db(transaction=True)
+    def test_order_create_check_basket(self, client, login_user, sample_basket):
+        login_user.address = 'address'
+        login_user.save()
+        response_order_create_check_basket = client.post('/api/v1/order/', data={'email_login': settings.EMAIL_TO_USER, 'express_delivery': True})
+        login_user_basket = Basket.objects.filter(b_customer=login_user).first()
+        assert login_user_basket is None
