@@ -1,8 +1,14 @@
+from unittest.mock import patch, MagicMock
+
 import pytest
 from django.contrib.auth.hashers import make_password
+from django.core import mail
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+
+from celery import Celery
 
 from backend_code.models import Customer, Product, Store, StoreCategory, ProductCategory, Basket, Order
 from marketplace import settings
@@ -61,6 +67,27 @@ def sample_basket(login_user, sample_product, sample_store):
 def sample_order(login_user, sample_basket):
     sample_order = Order.objects.create(order_number=1, order_customer=login_user, area_code=1, final_delivery_price=100, total_price=200, status='new')
     return sample_order
+
+
+celery = Celery()
+from backend_code.tasks import send_mail_async
+
+class TestEmail:
+
+    @pytest.mark.usefixtures('celery_session_app')
+    @pytest.mark.usefixtures('celery_session_worker')
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.memcache.EmailBackend')
+    @override_settings(CELERY_ALWAYS_EAGER=True)
+    # @patch('tasks.send_mail_async')
+    # @patch('load_rawdata', MagicMock(return_value=False))
+    def test_send_mail_async(self, celery_app, celery_worker):
+        send_mail_async.apply(subject='subject', body='body', from_email='from_email', to='to')
+        assert len(mail.outbox) == 1
+        # assert mail.outbox[0].subject == 'Subject here'
+        # assert mail.outbox[0].body == 'Here is the message.'
+        # assert mail.outbox[0].from_email == 'from@example.com'
+        # assert mail.outbox[0].to == ['to@example.com']
+
 
 
 class TestUser:
