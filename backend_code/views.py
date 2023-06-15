@@ -17,6 +17,7 @@ from django.template.loader import render_to_string
 from django.utils.datastructures import MultiValueDictKeyError
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
@@ -82,9 +83,11 @@ def order_confirmation_email(user, order, request):
     send_mail_async.delay(email_subject, email_body, settings.EMAIL_FROM_USER, [user.email_login])
 
 
+@extend_schema(tags=["Пользователь"], summary="Аутентификация пользователя")
 class LoginView(APIView):
-
-    # user login
+    '''
+    Аутентификация пользователя. Требуется ввести имейл и пароль. Для успешной аутентификации необходимо сначала зарегистрироваться (class CustomerSignUp, path('user-signup/')) и подтвердить имейл по ссылке, которая приходит на указанный адрес.
+    '''
     def post(self, request, *args, **kwargs):
         if {'email_login', 'password'}.issubset(request.data):
             current_customer = Customer.objects.filter(email_login=request.data['email_login']).first()
