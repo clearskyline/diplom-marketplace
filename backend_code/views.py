@@ -127,7 +127,6 @@ class LoginView(APIView):
         summary='Поиск товара по "слагу" (артикулу - stock number), названию или модели'),
     destroy=extend_schema(
         summary='Удаление товара (требуется аутентификация)'))
-
 class ProductViewSet(viewsets.ModelViewSet):
     '''
     С помощью данного url пользователь может найти товар по "слагу" (артикулу - stock number), а также найти товар по названию или модели (например, goods/?s=iphone). Для этих действий аутентифиация не трубется. Для удаления товара требуется аутентификация.
@@ -157,9 +156,11 @@ class VendorSupply(APIView):
         return JsonResponse({'Status': True, 'Message': 'Details will be sent to your email'})
 
 
+@extend_schema(tags=["Пользователь"], summary="Регистрация нового пользователя")
 class CustomerSignUp(APIView):
-
-    # user signup
+    '''
+    Регистрация нового пользователя. Необходимо указать все обязательные данные. В качестве логина для авторизации и идентификатора пользователя в системе используется адрес эл. почты.
+    '''
     def post(self, request, *args, **kwargs):
         if {'first_name', 'last_name', 'email_login', 'password', 'user_name', 'phone_number', 'area_code', 'registered_vendor', 'is_active'}.issubset(request.data):
             try:
@@ -186,9 +187,18 @@ class CustomerSignUp(APIView):
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
 
 
-# user view, edit, delete
+@extend_schema(tags=['Пользователь'])
+@extend_schema_view(
+    retrieve=extend_schema(
+        summary='Получение информации о пользователе'),
+    destroy=extend_schema(
+        summary='Удаление пользователя'),
+    update=extend_schema(
+        summary='Обновление информации о пользователе'))
 class CustomerViewSet(viewsets.ModelViewSet):
-
+    '''
+    По этому url можно получить информацию о пользователе, обновить информацию о пользователе и удалить пользователя. Для всех действий требуется аутентификация. Действия доступны только для текущего пользователя (для других пользователей выполнить эти действия невозможно).
+    '''
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     permission_classes = [IsLoggedIn,]
@@ -221,9 +231,20 @@ class CustomerViewSet(viewsets.ModelViewSet):
             return JsonResponse({'Status': False, 'Error': serializer.errors}, status=401)
 
 
-# store view, create, update, delete
+@extend_schema(tags=['Магазин'])
+@extend_schema_view(
+    retrieve=extend_schema(
+        summary='Получение информации о магазине'),
+    destroy=extend_schema(
+        summary='Удаление магазина'),
+    update=extend_schema(
+        summary='Обновление информации о магазине'),
+    create=extend_schema(
+        summary='Создание магазина'))
 class StoreViewSet(viewsets.ModelViewSet):
-
+    '''
+    По этому url можно создать магазин, получить информацию о магазине, обновить информацию о магазине, удалить магазин. Для создания магазина пользователь должен быть зарегистрирован как продавец (current_customer.registered_vendor = True) Для просмотра магазина аутентификация не нужна. Изменить и удалить магазин может только его владелец. Чтобы создать и обновить магазин, соответствующая категория магазина должна быть создана.
+    '''
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
     permission_classes = [IsLoggedIn,]
@@ -294,9 +315,18 @@ class StoreViewSet(viewsets.ModelViewSet):
             return JsonResponse({'Status': False, 'Error': 'Store not found'}, status=404)
 
 
-# basket view, create/update, delete
+@extend_schema(tags=['Корзина'])
+@extend_schema_view(
+    list=extend_schema(
+        summary='Список товаров в корзине'),
+    destroy=extend_schema(
+        summary='Удаление одного товара из корзины'),
+    create=extend_schema(
+        summary='Добавление товара в корзину, обновление товара в корзине'))
 class BasketViewSet(viewsets.ModelViewSet):
-
+    '''
+    По этому url можно получить список товаров в корзине для текущего пользователя, добавить товар в корзину (обновить товар в корзине) и удалить товар из корзины. Для всех действий требуется аутентификация. Для обработки запроса list надо указать имейл пользователя, для destroy - имейл и актикул товара (stock_number), для create - имейл, артикул и количество товара. Метод POST (create) обрабатывает запросы на добавление и обновление товара в корзине. Артикул товара передается не через "слаг", а через тело запроса.
+    '''
     queryset = Basket.objects.all()
     serializer_class = BasketSerializer
     permission_classes = [IsLoggedIn,]
