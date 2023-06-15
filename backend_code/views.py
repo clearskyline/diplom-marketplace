@@ -17,7 +17,7 @@ from django.template.loader import render_to_string
 from django.utils.datastructures import MultiValueDictKeyError
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets, status
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
@@ -42,6 +42,9 @@ from backend_code.tasks import send_mail_async, import_product_list_async, expor
 
 
 def send_activation_email(user, request):
+    '''
+    Отправка имейла после регистрации пользователя. Сообщение содержит ссылку для подтверждения адреса пользователя (необходимо для авторизации и дальнейшей работы).
+    '''
     current_site = get_current_site(request)
     email_subject = "Activation email"
     email_body = render_to_string('authentication/activate.html', {
@@ -74,6 +77,9 @@ def activate_user(request, uidb64, token):
 
 
 def order_confirmation_email(user, order, request):
+    '''
+    Отправка имейла для подтверждения заказа. Сообщение носит информативный характер, содержит сведения о пользователе и заказе.
+    '''
     email_subject = "Order confirmed"
     email_body = render_to_string('confirmation/order_confirm.html', {
         'user': user,
@@ -115,9 +121,17 @@ class LoginView(APIView):
         return JsonResponse({'Status': False, 'Error': 'Please provide email and password'}, status=401)
 
 
-class ProductViewSet(viewsets.ModelViewSet):
+@extend_schema(tags=['Товар'])
+@extend_schema_view(
+    retrieve=extend_schema(
+        summary='Поиск товара по "слагу" (артикулу - stock number), названию или модели'),
+    destroy=extend_schema(
+        summary='Удаление товара (требуется аутентификация)'))
 
-    # get product by slug (stock number), search by name/model, delete product (with auth)
+class ProductViewSet(viewsets.ModelViewSet):
+    '''
+    С помощью данного url пользователь может найти товар по "слагу" (артикулу - stock number), а также найти товар по названию или модели (например, goods/?s=iphone). Для этих действий аутентифиация не трубется. Для удаления товара требуется аутентификация.
+    '''
     queryset = Product.objects.all()
     lookup_field = 'slug'
     serializer_class = ProductSerializer
@@ -129,8 +143,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
 
+@extend_schema(tags=["Товар"], summary="Импорт списка товаров поставщика")
 class VendorSupply(APIView):
-
+    '''
+    Импорт списка товаров поставщика из файла yaml.
+    '''
     permission_classes = [IsLoggedIn,]
 
     # update vendor's product list

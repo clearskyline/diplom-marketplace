@@ -178,8 +178,8 @@ CELERY_BROKER_URL = "redis://localhost:6379"
 CELERY_RESULT_BACKEND = "redis://localhost:6379"
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Post API", # название проекта
-    "VERSION": "0.0.1", # версия проекта
+    "TITLE": "Marketplace - my personal project", # название проекта
+    "VERSION": "1.0", # версия проекта
     "SERVE_INCLUDE_SCHEMA": False, # исключить эндпоинт /schema
     "SWAGGER_UI_SETTINGS": {
         "filter": True, # включить поиск по тегам
