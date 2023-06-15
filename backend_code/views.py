@@ -129,7 +129,7 @@ class LoginView(APIView):
         summary='Удаление товара (требуется аутентификация)'))
 class ProductViewSet(viewsets.ModelViewSet):
     '''
-    С помощью данного url пользователь может найти товар по "слагу" (артикулу - stock number), а также найти товар по названию или модели (например, goods/?s=iphone). Для этих действий аутентифиация не трубется. Для удаления товара требуется аутентификация.
+    С помощью данного url пользователь может найти товар по "слагу" (артикулу - stock number), а также найти товар по названию или модели (например, goods/?s=iphone). Для этих действий аутентифиация не требуется. Для удаления товара требуется аутентификация пользователя в системе, кроме того, пользователь должен быть владельцем этого товара (IsProductOwner).
     '''
     queryset = Product.objects.all()
     lookup_field = 'slug'
@@ -145,7 +145,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 @extend_schema(tags=["Товар"], summary="Импорт списка товаров поставщика")
 class VendorSupply(APIView):
     '''
-    Импорт списка товаров поставщика из файла yaml.
+    Импорт списка товаров поставщика из файла yaml. Для успешного импорта идентификатор текущего пользователя (vendor_id) должен соответствовать идентификатору (vendor_id) в файле yaml.
     '''
     permission_classes = [IsLoggedIn,]
 
@@ -368,9 +368,19 @@ class BasketViewSet(viewsets.ModelViewSet):
                 return JsonResponse({'Status': False, 'Error': 'Invalid data'}, status=401)
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
 
-# store category view, create/update, delete
-class StoreCatViewSet(viewsets.ModelViewSet):
 
+@extend_schema(tags=['Категория магазина'])
+@extend_schema_view(
+    retrieve=extend_schema(
+        summary='Подробная информация о категории магазина'),
+    destroy=extend_schema(
+        summary='Удаление категории магазина'),
+    create=extend_schema(
+        summary='Создание или обновление категории магазина'))
+class StoreCatViewSet(viewsets.ModelViewSet):
+    '''
+    По этому url можно посмотреть сведения о категории магазина (включая все соответствующие магазины), создать (обновить) категорию магазина и удалить категорию магазина. У каждой категории магазина есть владелец (пользователь, создавший категорию - IsStoreCatOwner). Только он может выполнять действия с соответствующей категорией магазина.
+    '''
     queryset = StoreCategory.objects.all()
     serializer_class = StoreCatSerializer
     permission_classes = [IsLoggedIn, IsStoreCatOwner,]
@@ -418,9 +428,19 @@ class StoreCatViewSet(viewsets.ModelViewSet):
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
 
 
+@extend_schema(tags=['Категория товара'])
+@extend_schema_view(
+    retrieve=extend_schema(
+        summary='Информация о категории товара'),
+    destroy=extend_schema(
+        summary='Удаление категории товара'),
+    create=extend_schema(
+        summary='Создание или обновление категории товара'))
 # product category view, create/update, delete
 class ProductCatViewSet(viewsets.ModelViewSet):
-
+    '''
+    По данному url можно просмотреть сведения о категории товара (ИД и название), удалить категорию товара, создать или обновить категорию товара. Для просмотра категории аутентификация не требуется (AllowAny). Для остальных действий необходима аутентификация. Создание и обновление выполняется с помощью одного метода POST (create). Если при создании номер категории не указан, он будет сгенерирован автоматически.
+    '''
     queryset = ProductCategory.objects.all()
     serializer_class = ProdCatSerializer
     permission_classes = [IsLoggedIn,]
