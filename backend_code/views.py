@@ -142,10 +142,10 @@ class ProductViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
 
-@extend_schema(tags=["Товар"], summary="Импорт списка товаров поставщика")
+@extend_schema(tags=["Импорт товаров"], summary="Импорт списка товаров поставщика")
 class VendorSupply(APIView):
     '''
-    Импорт списка товаров поставщика из файла yaml. Для успешного импорта идентификатор текущего пользователя (vendor_id) должен соответствовать идентификатору (vendor_id) в файле yaml.
+    Импорт списка товаров поставщика из файла yaml. Для успешного импорта идентификатор текущего пользователя (vendor_id) должен соответствовать идентификатору (vendor_id) в файле yaml. Функция выполняется асинхронно с помощью celery. Пользователь получает имейл с информацией об успешном или неуспешном завершении операции. При этом работа программы не останавливается.
     '''
     permission_classes = [IsLoggedIn,]
 
@@ -581,17 +581,25 @@ class OrderViewSet(viewsets.ModelViewSet):
         return JsonResponse({'Status': False, 'Error': 'Please provide order number'}, status=401)
 
 
-# order detail view
+@extend_schema(tags=['Подробности заказа'])
+@extend_schema_view(
+    retrieve=extend_schema(
+        summary='Детали одного заказа пользователя'))
 class OrderDetailViewSet(viewsets.ModelViewSet):
-
+    '''
+    По этому url можно просмотреть полные сведения об определенном заказе пользователя. Номер заказа передается через slug. Для просмотра требуется аутентификация, кроме того, пользователь должен быть владельцем заказа (IsOrderOwner). Информация о товарах в заказе выводится с помощью сериализаторов OrderItemSerializer, ProductSerializer.
+    '''
     queryset = Order.objects.all()
     serializer_class = OrderDetailSerializer
     lookup_field = 'order_slug'
     permission_classes = [IsLoggedIn, IsOrderOwner]
 
 
+@extend_schema(tags=["Экспорт товаров"], summary="Экспорт списка товаров поставщика и отправка на имейл")
 class ProductExportViewSet(viewsets.ModelViewSet):
-
+    '''
+    Экспорт списка товаров поставщика в файл yaml и отправка в виде вложения на его адрес эл. почты. Функция выполняется асинхронно с помощью celery. При этом работа программы не останавливается.
+    '''
     permission_classes = [IsLoggedIn,]
 
     # export all products by specific vendor
