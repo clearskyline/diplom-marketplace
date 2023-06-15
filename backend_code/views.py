@@ -486,9 +486,16 @@ class ProductCatViewSet(viewsets.ModelViewSet):
         return JsonResponse({'Status': False, 'Error': 'Please fill all required fields'}, status=401)
 
 
-# order create, view (multiple), delete
+@extend_schema(tags=['Заказ'])
+@extend_schema_view(
+    destroy=extend_schema(
+        summary='Удаление заказа пользователя'),
+    create=extend_schema(
+        summary='Создание заказа пользователя'))
 class OrderViewSet(viewsets.ModelViewSet):
-
+    '''
+    По данному url можно просмотреть список заказов пользователя, удалить заказ и создать заказ. Изменение созданного заказа в программе не предусмотрено. Пользователь может удалить свой заказ, только если он еще не был отгружен (dispatched). При создании заказа надо указать параметр "экспресс-доставки" (True/False). При создании заказа стоимость доставки рассчитывается в зависимости от поставщика, габаритов (weight_class), региона (area_code) и экспресс-доставки. После создания заказа корзина автоматически очищается. Если корзина пуста или пользователь не указал при регистрации свой адрес, заказ не оформляется. Метод GET (order_list) выдает сведения обо всех заказах пользователя (без деталей). Для выполнения всех действий требуется аутентификация. Для просмотра заказов и удаления заказа пользователь должен быть владельцем заказа (IsOrderOwner).
+    '''
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsLoggedIn, IsOrderOwner]
@@ -547,6 +554,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         return JsonResponse({'Status': False, 'Error': 'Please provide express delivery info'}, status=401)
 
     # orders view
+    @extend_schema(summary="Список заказов пользователя")
     def order_list(self, request, *args, **kwargs):
         order_set = self.get_queryset()
         if order_set:
