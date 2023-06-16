@@ -159,10 +159,10 @@ class VendorSupply(APIView):
 
 @extend_schema(tags=["Пользователь"], summary="Регистрация нового пользователя")
 class CustomerSignUp(APIView):
-    throttle_classes = [UserSignUpThrottle]
     '''
     Регистрация нового пользователя. Необходимо указать все обязательные данные. В качестве логина для авторизации и идентификатора пользователя в системе используется адрес эл. почты.
     '''
+    throttle_classes = [UserSignUpThrottle]
     def post(self, request, *args, **kwargs):
         if {'first_name', 'last_name', 'email_login', 'password', 'user_name', 'phone_number', 'area_code', 'registered_vendor', 'is_active'}.issubset(request.data):
             try:
