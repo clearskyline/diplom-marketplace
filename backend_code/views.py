@@ -22,7 +22,7 @@ from rest_framework import viewsets, status
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from rest_framework.decorators import action, permission_classes, api_view
+from rest_framework.decorators import action, permission_classes, api_view, throttle_classes
 from rest_framework.generics import RetrieveDestroyAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -31,6 +31,7 @@ from datetime import datetime, timedelta
 import yaml
 from rest_framework.viewsets import ViewSet
 
+from backend_code.custom_throttles import UserSignUpThrottle
 from backend_code.models import Product, ProductCategory, Store, Customer, Basket, ProductParameters, StoreCategory, \
     Order, OrderItems
 from backend_code.permissions import IsLoggedIn, IsProductOwner, IsStoreCatOwner, IsOrderOwner
@@ -145,7 +146,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 @extend_schema(tags=["Импорт товаров"], summary="Импорт списка товаров поставщика")
 class VendorSupply(APIView):
     '''
-    Импорт списка товаров поставщика из файла yaml. Для успешного импорта идентификатор текущего пользователя (vendor_id) должен соответствовать идентификатору (vendor_id) в файле yaml. Функция выполняется асинхронно с помощью celery. Пользователь получает имейл с информацией об успешном или неуспешном завершении операции. При этом работа программы не останавливается.
+    Импорт списка товаров поставщика из файла yaml. Для успешного импорта идентификатор текущего пользователя (vendor_id) должен соответствовать идентификатору (vendor_id) в файле yaml. Функция выполняется асинхронно с помощью celery. Пользователь получает имейл с информацией об успешном или неуспешном завершении операции. При этом работа веб-приложения не останавливается.
     '''
     permission_classes = [IsLoggedIn,]
 
@@ -158,6 +159,7 @@ class VendorSupply(APIView):
 
 @extend_schema(tags=["Пользователь"], summary="Регистрация нового пользователя")
 class CustomerSignUp(APIView):
+    throttle_classes = [UserSignUpThrottle]
     '''
     Регистрация нового пользователя. Необходимо указать все обязательные данные. В качестве логина для авторизации и идентификатора пользователя в системе используется адрес эл. почты.
     '''
@@ -494,7 +496,7 @@ class ProductCatViewSet(viewsets.ModelViewSet):
         summary='Создание заказа пользователя'))
 class OrderViewSet(viewsets.ModelViewSet):
     '''
-    По данному url можно просмотреть список заказов пользователя, удалить заказ и создать заказ. Изменение созданного заказа в программе не предусмотрено. Пользователь может удалить свой заказ, только если он еще не был отгружен (dispatched). При создании заказа надо указать параметр "экспресс-доставки" (True/False). При создании заказа стоимость доставки рассчитывается в зависимости от поставщика, габаритов (weight_class), региона (area_code) и экспресс-доставки. После создания заказа корзина автоматически очищается. Если корзина пуста или пользователь не указал при регистрации свой адрес, заказ не оформляется. Метод GET (order_list) выдает сведения обо всех заказах пользователя (без деталей). Для выполнения всех действий требуется аутентификация. Для просмотра заказов и удаления заказа пользователь должен быть владельцем заказа (IsOrderOwner).
+    По данному url можно просмотреть список заказов пользователя, удалить заказ и создать заказ. Изменение созданного заказа в веб-приложении не предусмотрено. Пользователь может удалить свой заказ, только если он еще не был отгружен (dispatched). При создании заказа надо указать параметр "экспресс-доставки" (True/False). При создании заказа стоимость доставки рассчитывается в зависимости от поставщика, габаритов (weight_class), региона (area_code) и экспресс-доставки. После создания заказа корзина автоматически очищается. Если корзина пуста или пользователь не указал при регистрации свой адрес, заказ не оформляется. Метод GET (order_list) выдает сведения обо всех заказах пользователя (без деталей). Для выполнения всех действий требуется аутентификация. Для просмотра заказов и удаления заказа пользователь должен быть владельцем заказа (IsOrderOwner).
     '''
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
@@ -598,7 +600,7 @@ class OrderDetailViewSet(viewsets.ModelViewSet):
 @extend_schema(tags=["Экспорт товаров"], summary="Экспорт списка товаров поставщика и отправка на имейл")
 class ProductExportViewSet(viewsets.ModelViewSet):
     '''
-    Экспорт списка товаров поставщика в файл yaml и отправка в виде вложения на его адрес эл. почты. Функция выполняется асинхронно с помощью celery. При этом работа программы не останавливается.
+    Экспорт списка товаров поставщика в файл yaml и отправка в виде вложения на его адрес эл. почты. Функция выполняется асинхронно с помощью celery. При этом работа веб-приложения не останавливается.
     '''
     permission_classes = [IsLoggedIn,]
 
