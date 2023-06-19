@@ -34,7 +34,7 @@ from rest_framework.viewsets import ViewSet
 from backend_code.custom_throttles import UserSignUpThrottle
 from backend_code.models import Product, ProductCategory, Store, Customer, Basket, ProductParameters, StoreCategory, \
     Order, OrderItems
-from backend_code.permissions import IsLoggedIn, IsProductOwner, IsStoreCatOwner, IsOrderOwner
+from backend_code.permissions import IsAuthenticated, IsProductOwner, IsStoreCatOwner, IsOrderOwner
 from backend_code.serializers import ProductSerializer, CustomerSerializer, StoreSerializer, BasketSerializer, \
     StoreCatSerializer, ProdCatSerializer, OrderSerializer, OrderDetailSerializer
 from backend_code.token_gen import generate_token
@@ -139,7 +139,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == "destroy":
-            self.permission_classes = [IsLoggedIn, IsProductOwner,]
+            self.permission_classes = [IsAuthenticated, IsProductOwner,]
         return super().get_permissions()
 
 
@@ -148,7 +148,7 @@ class VendorSupply(APIView):
     '''
     Импорт списка товаров поставщика из файла yaml. Для успешного импорта идентификатор текущего пользователя (vendor_id) должен соответствовать идентификатору (vendor_id) в файле yaml. Функция выполняется асинхронно с помощью celery. Пользователь получает имейл с информацией об успешном или неуспешном завершении операции. При этом работа веб-приложения не останавливается.
     '''
-    permission_classes = [IsLoggedIn,]
+    permission_classes = [IsAuthenticated,]
 
     # update vendor's product list
     def post(self, request, *args, **kwargs):
@@ -203,7 +203,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
     '''
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    permission_classes = [IsLoggedIn,]
+    permission_classes = [IsAuthenticated,]
 
     def get_object(self):
         print(self.request.data)
@@ -249,7 +249,7 @@ class StoreViewSet(viewsets.ModelViewSet):
     '''
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
-    permission_classes = [IsLoggedIn,]
+    permission_classes = [IsAuthenticated,]
 
     def get_object(self):
         current_customer = Customer.objects.filter(email_login=self.request.data['email_login']).first()
@@ -331,7 +331,7 @@ class BasketViewSet(viewsets.ModelViewSet):
     '''
     queryset = Basket.objects.all()
     serializer_class = BasketSerializer
-    permission_classes = [IsLoggedIn,]
+    permission_classes = [IsAuthenticated,]
 
     def get_queryset(self):
         current_customer = Customer.objects.filter(email_login=self.request.data['email_login']).first()
@@ -385,7 +385,7 @@ class StoreCatViewSet(viewsets.ModelViewSet):
     '''
     queryset = StoreCategory.objects.all()
     serializer_class = StoreCatSerializer
-    permission_classes = [IsLoggedIn, IsStoreCatOwner,]
+    permission_classes = [IsAuthenticated, IsStoreCatOwner,]
 
     def get_object(self):
         obj = get_object_or_404(StoreCategory, store_cat_id=self.request.data['store_cat_id'])
@@ -445,7 +445,7 @@ class ProductCatViewSet(viewsets.ModelViewSet):
     '''
     queryset = ProductCategory.objects.all()
     serializer_class = ProdCatSerializer
-    permission_classes = [IsLoggedIn,]
+    permission_classes = [IsAuthenticated,]
 
     def get_object(self):
         try:
@@ -500,7 +500,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     '''
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    permission_classes = [IsLoggedIn, IsOrderOwner]
+    permission_classes = [IsAuthenticated, IsOrderOwner]
 
     def get_queryset(self):
         return Order.objects.filter(order_customer__email_login=self.request.data['email_login']).all()
@@ -594,7 +594,7 @@ class OrderDetailViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderDetailSerializer
     lookup_field = 'order_slug'
-    permission_classes = [IsLoggedIn, IsOrderOwner]
+    permission_classes = [IsAuthenticated, IsOrderOwner]
 
 
 @extend_schema(tags=["Экспорт товаров"], summary="Экспорт списка товаров поставщика и отправка на имейл")
@@ -602,7 +602,7 @@ class ProductExportViewSet(viewsets.ModelViewSet):
     '''
     Экспорт списка товаров поставщика в файл yaml и отправка в виде вложения на его адрес эл. почты. Функция выполняется асинхронно с помощью celery. При этом работа веб-приложения не останавливается.
     '''
-    permission_classes = [IsLoggedIn,]
+    permission_classes = [IsAuthenticated,]
 
     # export all products by specific vendor
     def export_product_list(self, request, *args, **kwargs):

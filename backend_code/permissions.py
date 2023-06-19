@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from backend_code.models import Customer
 
 
-class IsLoggedIn(BasePermission):
+class IsAuthenticated(BasePermission):
 
     def has_permission(self, request, view):
         if {'email_login'}.issubset(request.data):
