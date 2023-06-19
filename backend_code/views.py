@@ -30,6 +30,7 @@ from rest_framework.views import APIView
 from datetime import datetime, timedelta
 import yaml
 from rest_framework.viewsets import ViewSet
+from silk.profiling.profiler import silk_profile
 
 from backend_code.custom_throttles import UserSignUpThrottle
 from backend_code.models import Product, ProductCategory, Store, Customer, Basket, ProductParameters, StoreCategory, \
@@ -95,6 +96,8 @@ class LoginView(APIView):
     '''
     Аутентификация пользователя. Требуется ввести имейл и пароль. Для успешной аутентификации необходимо сначала зарегистрироваться (class CustomerSignUp, path('user-signup/')) и подтвердить имейл по ссылке, которая приходит на указанный адрес.
     '''
+
+    @silk_profile(name='User login')
     def post(self, request, *args, **kwargs):
         if {'email_login', 'password'}.issubset(request.data):
             current_customer = Customer.objects.filter(email_login=request.data['email_login']).first()
@@ -151,6 +154,7 @@ class VendorSupply(APIView):
     permission_classes = [IsAuthenticated,]
 
     # update vendor's product list
+    @silk_profile(name='Vendor supply list')
     def post(self, request, *args, **kwargs):
         file = "goods_yaml.yaml"
         import_product_list_async.delay(file, request.data)
@@ -163,6 +167,8 @@ class CustomerSignUp(APIView):
     Регистрация нового пользователя. Необходимо указать все обязательные данные. В качестве логина для авторизации и идентификатора пользователя в системе используется адрес эл. почты.
     '''
     throttle_classes = [UserSignUpThrottle]
+
+    @silk_profile(name='User sign up')
     def post(self, request, *args, **kwargs):
         if {'first_name', 'last_name', 'email_login', 'password', 'user_name', 'phone_number', 'area_code', 'registered_vendor', 'is_active'}.issubset(request.data):
             try:

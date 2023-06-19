@@ -29,4 +29,5 @@ urlpatterns = [
     path('', TemplateView.as_view(template_name="google-auth/google_login.html")),
     path('accounts/', include('allauth.urls')),
     path('logout', LogoutView.as_view()),
+    path('silk/', include('silk.urls', namespace='silk'))
 ]

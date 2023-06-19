@@ -15,3 +15,4 @@ pytest-django
 pytest
 drf-spectacular
 django-allauth
+django-silk
