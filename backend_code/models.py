@@ -112,7 +112,7 @@ class Customer(AbstractBaseUser, PermissionsMixin):
     registered_vendor = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     organization = models.CharField(max_length=150, blank=True)
-    area_code = models.PositiveIntegerField()
+    area_code = models.PositiveIntegerField(default=1)
     seller_vendor_id = models.PositiveIntegerField(unique=True, null=True, blank=True)
     basket_customer_item = models.ManyToManyField(Product, related_name='customer_basket', through='Basket')
     is_staff = models.BooleanField(default=False)
