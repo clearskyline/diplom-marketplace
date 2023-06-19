@@ -226,7 +226,7 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email_login'
 ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email_login'
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_ADAPTER = 'backend_code.adapters.CustomAdapter'
+ACCOUNT_ADAPTER = 'backend_code.custom_adapter.CustomAdapter'
 
 
 LOGIN_REDIRECT_URL = '/'
