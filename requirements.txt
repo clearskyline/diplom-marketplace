@@ -14,3 +14,4 @@ django-filter
 pytest-django
 pytest
 drf-spectacular
+django-allauth

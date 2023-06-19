@@ -1,7 +1,9 @@
-from django.contrib.auth.models import AbstractBaseUser, AbstractUser
+from django.contrib.auth.models import AbstractBaseUser, AbstractUser, UserManager, PermissionsMixin
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.template.defaultfilters import slugify
+
+from backend_code.managers import CustomUserManager
 
 STATUS_CHOICES = (
     ('new', 'NEW'),
@@ -94,7 +96,7 @@ class Product(models.Model):
         return f'{self.stock_number} ({self.name} - {self.price} руб.)'
 
 
-class Customer(AbstractBaseUser):
+class Customer(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = []
     username = None
     email_login = models.EmailField(unique=True)
@@ -113,6 +115,10 @@ class Customer(AbstractBaseUser):
     area_code = models.PositiveIntegerField()
     seller_vendor_id = models.PositiveIntegerField(unique=True, null=True, blank=True)
     basket_customer_item = models.ManyToManyField(Product, related_name='customer_basket', through='Basket')
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+
+    objects = CustomUserManager()
 
     def __str__(self):
         return self.user_name
