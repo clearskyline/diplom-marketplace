@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv('/home/dmitry/CODING/.env', override=True)
+load_dotenv(override=True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -223,7 +223,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 
-SITE_ID = 3
+SITE_ID = 4
 ACCOUNT_AUTHENTICATION_METHOD = 'email_login'
 ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email_login'
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
