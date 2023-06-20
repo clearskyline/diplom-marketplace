@@ -8,6 +8,27 @@ volumes:
   coding:
 
 services:
+  redis:
+    image: redis:7.0.0-alpine3.15
+    ports:
+      - "6379:6379"
+    networks:
+      backend:
+        aliases:
+          - db-redis
+  celery:
+    build:
+      context: .
+    environment:
+      BACKEND: ${BACKEND}
+      BROKER: ${BROKER}
+    entrypoint: celery -A marketplace worker
+    depends_on:
+      - redis
+    networks:
+      backend:
+    volumes:
+      - coding:/code
   postgredb:
     image: postgres:latest
     ports:
@@ -37,12 +58,15 @@ services:
       - coding:/code
     environment:
       APP_ENV: development
+      BACKEND: ${BACKEND}
+      BROKER: ${BROKER}
     command: >
       sh -c "python3 manage.py makemigrations &&
             python3 manage.py migrate &&
             gunicorn marketplace.wsgi:application --bind 0.0.0.0:8000"
     depends_on:
       - postgredb
+      - redis
     networks:
       - backend
     restart: unless-stopped
